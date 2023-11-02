@@ -29,10 +29,12 @@ def github_login(request):
 
     # Store state info in session
     request.session["state"] = secrets.token_urlsafe(16)
+    
+    uri = request.build_absolute_uri('/')[:-1].strip("/")
 
     url = client.prepare_request_uri(
         settings.GITHUB_OAUTH_URL,
-        redirect_uri=f"{request.build_absolute_uri('/')[:-1].strip("/")}/{settings.GITHUB_OAUTH_CALLBACK_URL}",
+        redirect_uri=f"{uri}/{settings.GITHUB_OAUTH_CALLBACK_URL}",
         scope=settings.GITHUB_OAUTH_SCOPES,
         state=request.session["state"],
         allow_signup="false",
@@ -83,10 +85,12 @@ class CallbackView(TemplateView):
         # Create a Web Application Client from oauthlib
         client = WebApplicationClient(client_id)
 
+        uri = request.build_absolute_uri('/')[:-1].strip("/")
+
         # Prepare body for request
         data = client.prepare_request_body(
             code=code,
-            redirect_uri=f"{request.build_absolute_uri('/')[:-1].strip("/")}/{settings.GITHUB_OAUTH_CALLBACK_URL}",
+            redirect_uri=f"{uri}/{settings.GITHUB_OAUTH_CALLBACK_URL}",
             client_id=client_id,
             client_secret=client_secret,
         )
