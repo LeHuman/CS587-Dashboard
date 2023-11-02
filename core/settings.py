@@ -67,7 +67,7 @@ if 'LOCAL' not in os.environ:
 DEBUG = 'RENDER' not in os.environ
 
 # HOSTs List
-ALLOWED_HOSTS = ["ghdash.zapto.org", 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ["ghdash.zapto.org", 'cs587-dashboard.onrender.com', 'localhost', '127.0.0.1']
 
 # Add here your deployment HOSTS
 CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://localhost:5085', 'http://127.0.0.1:8000', 'http://127.0.0.1:5085']
@@ -209,6 +209,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # OAuth Settings
 GITHUB_OAUTH_CLIENT_ID = os.getenv("GITHUB_OAUTH_CLIENT_ID")
 GITHUB_OAUTH_SECRET = os.getenv("GITHUB_OAUTH_SECRET")
-GITHUB_OAUTH_CALLBACK_URL = f"https://{ALLOWED_HOSTS[0]}/callback"
+GITHUB_OAUTH_CALLBACK_URL = "callback" # https://{ALLOWED_HOSTS[0]}/
 GITHUB_OAUTH_URL = "https://github.com/login/oauth/authorize"
 GITHUB_OAUTH_SCOPES = [] # https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps
