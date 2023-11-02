@@ -10,11 +10,34 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
-import os, random, string
+import os
+import random
+import string
+import socket
+
 from pathlib import Path
 from dotenv import load_dotenv
+from django.core.management.commands.runserver import Command as runserver
 
 load_dotenv()  # take environment variables from .env.
+
+def get_ip():
+    """Get local ip address
+
+    Returns:
+        ip: string ip address
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.settimeout(0)
+    try:
+        # doesn't even have to be reachable
+        sock.connect(('10.254.254.254', 1))
+        ip = sock.getsockname()[0]
+    except Exception:
+        ip = '127.0.0.1'
+    finally:
+        sock.close()
+    return str(ip)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,23 +50,37 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 if not SECRET_KEY:
     SECRET_KEY = ''.join(random.choice( string.ascii_lowercase  ) for i in range( 32 ))
 
+# SSL
+
+if 'LOCAL' not in os.environ:
+    global SECURE_PROXY_SSL_HEADER, SECURE_SSL_REDIRECT, SESSION_COOKIE_SECURE, CSRF_COOKIE_SECURE, RUNSERVERPLUS_SERVER_ADDRESS_PORT
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    runserver.default_port = 443
+    runserver.default_addr = get_ip()
+    RUNSERVERPLUS_SERVER_ADDRESS_PORT = f"{runserver.default_addr}:{runserver.default_port}"
+
 # Render Deployment Code
 DEBUG = 'RENDER' not in os.environ
 
 # HOSTs List
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ["ghdash.zapto.org", 'localhost', '127.0.0.1']
 
 # Add here your deployment HOSTS
 CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://localhost:5085', 'http://127.0.0.1:8000', 'http://127.0.0.1:5085']
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:    
+if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # Application definition
 
 INSTALLED_APPS = [
     'admin_soft.apps.AdminSoftDashboardConfig',
+    "django_extensions",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -168,3 +205,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_REDIRECT_URL = '/'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# OAuth Settings
+GITHUB_OAUTH_CLIENT_ID = os.getenv("GITHUB_OAUTH_CLIENT_ID")
+GITHUB_OAUTH_SECRET = os.getenv("GITHUB_OAUTH_SECRET")
+GITHUB_OAUTH_CALLBACK_URL = f"https://{ALLOWED_HOSTS[0]}/callback"
+GITHUB_OAUTH_URL = "https://github.com/login/oauth/authorize"
+GITHUB_OAUTH_SCOPES = [] # https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps

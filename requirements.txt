@@ -11,3 +11,6 @@ gunicorn==21.2.0
 
 # psycopg2-binary
 # mysqlclient
+
+# Logic
+github3.py==4.0.1
