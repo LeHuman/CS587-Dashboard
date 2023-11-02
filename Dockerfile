@@ -15,7 +15,7 @@ COPY . .
 RUN python manage.py migrate
 
 # collect static files
-RUN python manage.py collectstatic
+# RUN python manage.py collectstatic
 
 # gunicorn
 CMD ["gunicorn", "--config", "gunicorn-cfg.py", "core.wsgi"]
