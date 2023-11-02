@@ -14,3 +14,4 @@ gunicorn==21.2.0
 
 # Logic
 github3.py==4.0.1
+django_extensions==3.2.3
