@@ -2,6 +2,7 @@
 
 import json
 import secrets
+import github3
 import requests
 
 # from github import Github
@@ -17,6 +18,7 @@ from django.contrib import messages
 from oauthlib.oauth2 import WebApplicationClient
 from github3.users import ShortUser
 from github3.repos import ShortRepository
+from github3.events import Event
 
 from core import settings
 from home.github_api import get_user
@@ -128,15 +130,27 @@ class CallbackView(TemplateView):
         #     "starred" : [x for x in me.get_starred()],
         # }
         # g.close()
-        
+
         # print(user_profile)
-        
+
         def str_short_user(usr : ShortUser) -> dict[str,str]:
             return {
                 "id":usr.id,
                 "login" : usr.login,
                 "avatar_url" : usr.avatar_url,
                 "url":usr.html_url,
+            }
+
+        def str_event(event : Event) -> dict[str,str]:
+            return {
+                "actor" : event.actor.id,
+                "created_at" : event.created_at.strftime("%d/%m/%Y, %H:%M:%S") if event.created_at else "None",
+                "id" : event.id,
+                "org" : event.org.id if event.org else "None",
+                "type" : event.type,
+                "payload" : event.payload,
+                "repo" : event.repo,
+                "public" : event.public,
             }
 
         def str_short_repository(repo : ShortRepository) -> dict[str,str]:
@@ -155,8 +169,7 @@ class CallbackView(TemplateView):
                 "watchers" : repo.watchers,
                 "url":repo.html_url,
             }
-            return repo.as_dict()
-        
+
         gh_usr = get_user(token=access_token)
         self.request.session["profile"] = {
             "id" : gh_usr.id,
@@ -169,15 +182,20 @@ class CallbackView(TemplateView):
             "following" : [str_short_user(x) for x in gh_usr.following(10)],
             "bio" : gh_usr.bio,
             "company" : gh_usr.company,
-            "events" : [repr(x) for x in gh_usr.events(True, 10)],
-            "starred_repos" : [str_short_repository(x) for x in gh_usr.starred_repositories(number=10)],
+            "events" : [str_event(x) for x in gh_usr.events(True, 10)],
+            "starred_repos" : [str_short_repository(x) for x in gh_usr.starred_repositories(sort='updated', number=10)],
             "subscriptions" : [str_short_repository(x) for x in gh_usr.subscriptions(number=10)],
             "plan" : gh_usr.plan,
-            # "repos" : gh_usr.rep,
+            "follower_count" : gh_usr.followers_count,
+            "repo_pub_count" : gh_usr.public_repos_count,
+            "repo_priv_count" : gh_usr.total_private_repos_count if gh_usr.total_private_repos_count else 0,
+            "gist_pub_count" : gh_usr.public_gists_count if gh_usr.public_gists_count else 0,
+            "repos" : [str_short_repository(x) for x in gh_usr._iter(10, gh_usr.repos_url, ShortRepository, {"sort": 'created', "direction": 'desc'})],
+            "api_limit" : gh_usr.ratelimit_remaining,
         }
-        
-        print(f"Ratelimit remaining:{gh_usr.ratelimit_remaining}")
-        
+
+        # print(f"Ratelimit remaining:{gh_usr.ratelimit_remaining}")
+
         # print(json.dumps(self.request.session["profile"], indent=4))
 
         # gh_user = get_user(token=access_token) # TODO: handle get_user error
