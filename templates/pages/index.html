@@ -12,13 +12,15 @@
             <h4>You are not logged in</h4>
             {% endif %}
         </div>
+    </div>
+    <div class="row">
         <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
             <div class="card">
                 <div class="card-body p-3">
                     <div class="row">
                         <div class="col-8">
                             <div class="numbers">
-                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Total Public Repositories</p>
+                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Public Repositories</p>
                                 <h5 class="font-weight-bolder mb-0">
                                     {% if user.is_authenticated and request.session.profile.repo_pub_count %}
                                     {{request.session.profile.repo_pub_count}}
@@ -47,7 +49,7 @@
                     <div class="row">
                         <div class="col-8">
                             <div class="numbers">
-                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Total Private Repositories</p>
+                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Private Repositories</p>
                                 <h5 class="font-weight-bolder mb-0">
                                     {% if user.is_authenticated and request.session.profile.total_private_repos_count%}
                                     {{request.session.profile.total_private_repos_count}}
@@ -116,6 +118,8 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="row mt-xl-4 mt-1">
         <div class="col-xl-3 col-sm-6">
             <div class="card">
                 <div class="card-body p-3">
@@ -703,7 +707,9 @@
                     </p> -->
                 </div>
                 {% if not user.is_authenticated %}
-                <p href="{% url 'home:login' %}">Login to see!</p>
+                <div class="timeline-content">
+                    <p class="text-secondary text-sm mb-0">Login to see!</p>
+                </div>
                 {% else %}
                 <div class="card-body p-3">
                     <div class="timeline timeline-one-side">
