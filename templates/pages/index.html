@@ -980,7 +980,9 @@
 
         updateCommitChart(filterWeeks, filterDatapoints);
     }
+</script>
 
+<script>
     document.addEventListener('DOMContentLoaded', function () {
         var clickableItems = document.querySelectorAll('.clickable');
 
@@ -1016,12 +1018,7 @@
                     },
                     success: function (response) {
                         console.log('Repo Chosen:', response);
-                        // Update the HTML with the received data
-                        //var repoDetailsDiv = document.getElementById('repoDetails');
-                        //var owner = JSON.parse(response.owner);
-                        //if (items && typeof items.username !== 'undefined')
 
-                        // Extracting total and week values into separate arrays
                         commit_weeks = response.commit_activity[0].map(week => week.week);
                         commit_totals = response.commit_activity[0].map(week => week.total);
 

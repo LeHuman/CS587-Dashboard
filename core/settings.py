@@ -64,8 +64,7 @@ if 'LOCAL' not in os.environ:
 
     runserver.default_port = 443
     runserver.default_addr = get_ip()
-    RUNSERVERPLUS_SERVER_ADDRESS_PORT = f"{
-        runserver.default_addr}:{runserver.default_port}"
+    RUNSERVERPLUS_SERVER_ADDRESS_PORT = f"{runserver.default_addr}:{runserver.default_port}"
 
 # Render Deployment Code
 DEBUG = 'RENDER' not in os.environ
