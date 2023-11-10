@@ -67,7 +67,7 @@ if 'LOCAL' not in os.environ:
     RUNSERVERPLUS_SERVER_ADDRESS_PORT = f"{runserver.default_addr}:{runserver.default_port}"
 
 # Render Deployment Code
-DEBUG = 'RENDER' not in os.environ
+DEBUG = True
 CURRENT_TOKEN = os.getenv("CURRENT_TOKEN")
 
 # HOSTs List
