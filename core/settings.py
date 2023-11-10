@@ -70,7 +70,7 @@ if 'LOCAL' not in os.environ:
 # Render Deployment Code
 # DEBUG = 'RENDER' not in os.environ
 DEBUG = True
-CURRENT_TOKEN = os.getenv("CURRENT_TOKEN")
+CURRENT_TOKEN = os.getenv("CURRENT_TOKEN", None)
 
 # HOSTs List
 ALLOWED_HOSTS = ["ghdash.zapto.org", 'cs587-dashboard.onrender.com',
