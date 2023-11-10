@@ -16,6 +16,7 @@ import string
 import socket
 
 from pathlib import Path
+import dj_database_url
 from dotenv import load_dotenv
 from django.core.management.commands.runserver import Command as runserver
 
@@ -67,6 +68,7 @@ if 'LOCAL' not in os.environ:
     RUNSERVERPLUS_SERVER_ADDRESS_PORT = f"{runserver.default_addr}:{runserver.default_port}"
 
 # Render Deployment Code
+# DEBUG = 'RENDER' not in os.environ
 DEBUG = True
 CURRENT_TOKEN = os.getenv("CURRENT_TOKEN")
 
@@ -131,7 +133,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
@@ -142,7 +143,13 @@ DB_HOST = os.getenv('DB_HOST', None)
 DB_PORT = os.getenv('DB_PORT', None)
 DB_NAME = os.getenv('DB_NAME', None)
 
-if DB_ENGINE and DB_NAME and DB_USERNAME:
+DB_URL = os.getenv('DB_URL', None)
+
+if DB_URL:
+    DATABASES = {
+        'default': dj_database_url.config(default=DB_URL, conn_max_age=600),
+    }
+elif DB_ENGINE and DB_NAME and DB_USERNAME:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.' + DB_ENGINE,
