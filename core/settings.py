@@ -21,6 +21,7 @@ from django.core.management.commands.runserver import Command as runserver
 
 load_dotenv()  # take environment variables from .env.
 
+
 def get_ip():
     """Get local ip address
 
@@ -39,6 +40,7 @@ def get_ip():
         sock.close()
     return str(ip)
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -48,7 +50,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY')
 if not SECRET_KEY:
-    SECRET_KEY = ''.join(random.choice( string.ascii_lowercase  ) for i in range( 32 ))
+    SECRET_KEY = ''.join(random.choice(string.ascii_lowercase)
+                         for i in range(32))
 
 # SSL
 
@@ -61,16 +64,20 @@ if 'LOCAL' not in os.environ:
 
     runserver.default_port = 443
     runserver.default_addr = get_ip()
-    RUNSERVERPLUS_SERVER_ADDRESS_PORT = f"{runserver.default_addr}:{runserver.default_port}"
+    RUNSERVERPLUS_SERVER_ADDRESS_PORT = f"{
+        runserver.default_addr}:{runserver.default_port}"
 
 # Render Deployment Code
 DEBUG = 'RENDER' not in os.environ
+CURRENT_TOKEN = os.getenv("CURRENT_TOKEN")
 
 # HOSTs List
-ALLOWED_HOSTS = ["ghdash.zapto.org", 'cs587-dashboard.onrender.com', 'localhost', '127.0.0.1', '192.168.1.100']
+ALLOWED_HOSTS = ["ghdash.zapto.org", 'cs587-dashboard.onrender.com',
+                 'localhost', '127.0.0.1', '192.168.1.100']
 
 # Add here your deployment HOSTS
-CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://localhost:5085', 'http://127.0.0.1:8000', 'http://127.0.0.1:5085']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://localhost:5085',
+                        'http://127.0.0.1:8000', 'http://127.0.0.1:5085']
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
@@ -81,6 +88,7 @@ if RENDER_EXTERNAL_HOSTNAME:
 INSTALLED_APPS = [
     'admin_soft.apps.AdminSoftDashboardConfig',
     "django_extensions",
+    # "bootstrap_datepicker_plus",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -128,23 +136,23 @@ WSGI_APPLICATION = "core.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-DB_ENGINE   = os.getenv('DB_ENGINE'   , None)
-DB_USERNAME = os.getenv('DB_USERNAME' , None)
-DB_PASS     = os.getenv('DB_PASS'     , None)
-DB_HOST     = os.getenv('DB_HOST'     , None)
-DB_PORT     = os.getenv('DB_PORT'     , None)
-DB_NAME     = os.getenv('DB_NAME'     , None)
+DB_ENGINE = os.getenv('DB_ENGINE', None)
+DB_USERNAME = os.getenv('DB_USERNAME', None)
+DB_PASS = os.getenv('DB_PASS', None)
+DB_HOST = os.getenv('DB_HOST', None)
+DB_PORT = os.getenv('DB_PORT', None)
+DB_NAME = os.getenv('DB_NAME', None)
 
 if DB_ENGINE and DB_NAME and DB_USERNAME:
-    DATABASES = { 
-      'default': {
-        'ENGINE'  : 'django.db.backends.' + DB_ENGINE, 
-        'NAME'    : DB_NAME,
-        'USER'    : DB_USERNAME,
-        'PASSWORD': DB_PASS,
-        'HOST'    : DB_HOST,
-        'PORT'    : DB_PORT,
-        }, 
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.' + DB_ENGINE,
+            'NAME': DB_NAME,
+            'USER': DB_USERNAME,
+            'PASSWORD': DB_PASS,
+            'HOST': DB_HOST,
+            'PORT': DB_PORT,
+        },
     }
 else:
     DATABASES = {
@@ -196,8 +204,8 @@ STATICFILES_DIRS = (
 )
 
 # if not DEBUG:
-    # STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
-    # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -210,6 +218,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # OAuth Settings
 GITHUB_OAUTH_CLIENT_ID = os.getenv("GITHUB_OAUTH_CLIENT_ID")
 GITHUB_OAUTH_SECRET = os.getenv("GITHUB_OAUTH_SECRET")
-GITHUB_OAUTH_CALLBACK_URL = "callback" # https://{ALLOWED_HOSTS[0]}/
+GITHUB_OAUTH_CALLBACK_URL = "callback"  # https://{ALLOWED_HOSTS[0]}/
 GITHUB_OAUTH_URL = "https://github.com/login/oauth/authorize"
-GITHUB_OAUTH_SCOPES = [] # https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps
+# https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps
+GITHUB_OAUTH_SCOPES = ['repo']

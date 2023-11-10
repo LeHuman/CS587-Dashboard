@@ -7,6 +7,16 @@
             "label": "run dev",
             "type": "shell",
             "command": "py manage.py runserver_plus --cert cert/certificate.crt --key cert/private.key"
+        },
+        {
+            "label": "migrate",
+            "type": "shell",
+            "command": "python manage.py makemigrations; python manage.py migrate"
+        },
+        {
+            "label": "collectstatic",
+            "type": "shell",
+            "command": "python manage.py collectstatic"
         }
     ]
 }

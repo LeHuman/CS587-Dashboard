@@ -3,6 +3,8 @@
 
 {% block content %}
 
+{% csrf_token %}
+
 <title>
     {% block title %}
     {% if user.is_authenticated %}
@@ -157,56 +159,99 @@
         </div>
     </div>
 
-    <!-- <div class="row mt-4">
-        <div class="col-lg-7 mb-lg-0 mb-4">
-            <div class="card">
+    <div class="row mt-4">
+        <div class="col-lg-5 mb-lg-0 mb-4">
+            <div class="card z-index-2">
+                <div class="card-header pb-0">
+                    <h6>Commit Overview</h6>
+                    <!-- <p class="text-sm">
+                        <i class="fa fa-arrow-up text-success"></i>
+                        <span class="font-weight-bold">4% more</span> in 2021
+                    </p> -->
+                </div>
                 <div class="card-body p-3">
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <div class="d-flex flex-column h-100">
-                                <p class="mb-1 pt-2 text-bold">Built by developers</p>
-                                <h5 class="font-weight-bolder">Github Profile Dash</h5>
-                                <p class="mb-5">From colors, cards, typography to complex elements, you will find the
-                                    full documentation.</p>
-                                <a class="text-body text-sm font-weight-bold mb-0 icon-move-right mt-auto"
-                                    href="javascript:;">
-                                    Read More
-                                    <i class="fas fa-arrow-right text-sm ms-1" aria-hidden="true"></i>
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-lg-5 ms-auto text-center mt-5 mt-lg-0">
-                            <div class="bg-gradient-primary border-radius-lg h-100">
-                                <img src="{% static 'img/shapes/waves-white.svg' %}"
-                                    class="position-absolute h-100 w-50 top-0 d-lg-block d-none" alt="waves">
-                                <div class="position-relative d-flex align-items-center justify-content-center h-100">
-                                    <img class="w-100 position-relative z-index-2 pt-4"
-                                        src="{% static 'img/illustrations/rocket-white.png' %}" alt="rocket">
-                                </div>
-                            </div>
-                        </div>
+                    <div class="chart">
+                        <canvas id="chart-commit-activity" class="chart-canvas" height="300"></canvas>
                     </div>
+                    <input onchange="filterCommitData()" type="date" id="startdate" value="2023-11-07">
+                    <input onchange="filterCommitData()" type="date" id="enddate" value="2023-11-12">
                 </div>
             </div>
         </div>
-        <div class="col-lg-5">
-            <div class="card h-100 p-3">
-                <div class="overflow-hidden position-relative border-radius-lg bg-cover h-100"
-                    style="background-image: url('{% static 'img/ivancik.jpg' %}');">
-                    <span class="mask bg-gradient-dark"></span>
-                    <div class="card-body position-relative z-index-1 d-flex flex-column h-100 p-3">
-                        <h5 class="text-white font-weight-bolder mb-4 pt-2">Work with the rockets</h5>
-                        <p class="text-white">Wealth creation is an evolutionarily recent positive-sum game. It is all
-                            about who take the opportunity first.</p>
-                        <a class="text-white text-sm font-weight-bold mb-0 icon-move-right mt-auto" href="javascript:;">
-                            Read More
-                            <i class="fas fa-arrow-right text-sm ms-1" aria-hidden="true"></i>
-                        </a>
-                    </div>
-                </div>
+        <div class="col-lg-7">
+            <input type="text" id="repoSearch" class="form-control mb-3" placeholder="Search by repo name">
+            <!-- TODO: Fuzzy search -->
+            <!-- <script src="https://cdn.jsdelivr.net/npm/fuse.js"></script>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const repoList = Array.from(document.querySelectorAll('#itemList .list-group-item')).map(repo => {
+                            return {
+                                element: repo,
+                                name: repo.getAttribute('data-item-repo-name').toLowerCase(),
+                                author: repo.getAttribute('data-item-owner-login').toLowerCase(),
+                                description: repo.getAttribute('data-item-repo-desc').toLowerCase(),
+                            };
+                        });
+    
+                        const fuseOptions = {
+                            keys: ['name', 'author', 'description'],
+                            includeScore: true,
+                        };
+    
+                        const fuse = new Fuse(repoList, fuseOptions);
+    
+                        document.getElementById('repoSearch').addEventListener('input', function () {
+                            const searchQuery = this.value.toLowerCase();
+    
+                            const result = fuse.search(searchQuery);
+    
+                            result.sort((a, b) => a.score - b.score);
+    
+                            repoList.forEach(repo => {
+                                repo.element.classList.add('d-none');
+                            });
+    
+                            result.forEach(item => {
+                                console.log(item)
+                                item.item.element.classList.remove('d-none');
+                            });
+                        });
+                    });
+                </script> -->
+            <div class="overflow-auto" style="max-height: 400px;">
+                <ul class="list-group" id="itemList">
+                    {% if user.is_authenticated %}
+                    {% for repo in request.session.profile.repos %}
+                    <li class="list-group-item clickable" data-item-repo-name="{{repo.name}}"
+                        data-item-owner-login="{{repo.owner.login}}" data-item-repo-desc="{{repo.description}}"
+                        data-repo-url="{{repo.url}}" data-item-id="{{repo.id}}">
+                        <div class="d-flex align-items-center">
+                            <h5 class="mb-0">{{repo.name}}</h5>
+                            <a href="{{repo.url}}" target="_blank" class="ni ni-curved-next text-lg ms-2"></a>
+                            <div class="spinner-border spinner-border-sm text-primary ms-2 d-none" role="status"
+                                id="spinner-{{repo.id}}">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <a href="{{repo.owner.url}}" target="_blank"
+                                class="avatar avatar-xs rounded-circle ms-0 me-1" data-bs-toggle="tooltip"
+                                data-bs-placement="bottom" title="{{repo.owner.login}}">
+                                <img src="{{repo.owner.avatar_url}}" alt="{{repo.owner.login}}">
+                            </a>
+                            <h6 class="mb-0">{{repo.owner.login}}</h6>
+                        </div>
+                        {% if repo.description %}
+                        <p class="mb-1">{{repo.description}}</p>
+                        {% endif %}
+                        <small>{{repo.updated_at.day}} - {{repo.updated_at.time}}</small>
+                    </li>
+                    {% endfor %}
+                    {% endif %}
+                </ul>
             </div>
         </div>
-    </div> -->
+    </div>
 
     <div class="row mt-4">
         <div class="col-lg-5 mb-lg-0 mb-4">
@@ -363,22 +408,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-7">
-            <div class="card z-index-2">
-                <div class="card-header pb-0">
-                    <h6>Sales overview</h6>
-                    <p class="text-sm">
-                        <i class="fa fa-arrow-up text-success"></i>
-                        <span class="font-weight-bold">4% more</span> in 2021
-                    </p>
-                </div>
-                <div class="card-body p-3">
-                    <div class="chart">
-                        <canvas id="chart-line" class="chart-canvas" height="300"></canvas>
                     </div>
                 </div>
             </div>
@@ -716,25 +745,27 @@
                         <span class="font-weight-bold">24%</span> this month
                     </p> -->
                 </div>
-                {% if not user.is_authenticated %}
-                <div class="timeline-content">
-                    <p class="text-secondary text-sm mb-0">Login to see!</p>
-                </div>
-                {% else %}
-                <div class="card-body p-3">
-                    <div class="timeline timeline-one-side">
-                        {% for repo in request.session.profile.repos%}
-                        <div class="timeline-block mb-3">
-                            <span class="timeline-step">
-                                <i class="ni ni-book-bookmark text-info text-gradient"></i>
-                            </span>
-                            <div class="timeline-content">
-                                <h6 class="text-dark text-sm font-weight-bold mb-0">{{repo.full_name}}</h6>
-                                <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{repo.updated_at}}</p>
+                <div class="overflow-auto" style="max-height: 450px;">
+                    {% if not user.is_authenticated %}
+                    <div class="timeline-content">
+                        <p class="text-secondary text-sm mb-0">Login to see!</p>
+                    </div>
+                    {% else %}
+                    <div class="card-body p-3">
+                        <div class="timeline timeline-one-side">
+                            {% for repo in request.session.profile.repos|slice:":10"%}
+                            <div class="timeline-block mb-3">
+                                <span class="timeline-step">
+                                    <i class="ni ni-book-bookmark text-info text-gradient"></i>
+                                </span>
+                                <div class="timeline-content">
+                                    <h6 class="text-dark text-sm font-weight-bold mb-0">{{repo.full_name}}</h6>
+                                    <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{repo.created_at.day}}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                        {% endfor %}
-                        <!-- <div class="timeline-block mb-3">
+                            {% endfor %}
+                            <!-- <div class="timeline-block mb-3">
                             <span class="timeline-step">
                                 <i class="ni ni-key-25 text-primary text-gradient"></i>
                             </span>
@@ -752,9 +783,10 @@
                                 <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">17 DEC</p>
                             </div>
                         </div> -->
+                        </div>
                     </div>
+                    {% endif %}
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -768,10 +800,249 @@
 <!-- Specific JS goes HERE -->
 {% block scripts %}
 
+<script src="{% static 'js/jquery.min.js' %}"></script>
 <script src="{% static 'js/plugins/chartjs.min.js' %}"></script>
+
+<script>
+    document.getElementById('repoSearch').addEventListener('input', function () {
+        const searchQuery = this.value.toLowerCase();
+
+        const repos = document.querySelectorAll('#itemList .list-group-item');
+
+        repos.forEach(function (repo) {
+            const name = repo.getAttribute('data-item-repo-name').toLowerCase();
+            const author = repo.getAttribute('data-item-owner-login').toLowerCase();
+            const description = repo.getAttribute('data-item-repo-desc').toLowerCase();
+
+            const shouldShow = name.includes(searchQuery) || author.includes(searchQuery) || description.includes(searchQuery);
+            repo.style.display = shouldShow ? 'block' : 'none';
+        });
+    });
+</script>
+
+<script>
+    var ctx2 = document.getElementById("chart-commit-activity").getContext("2d");
+
+    var gradientStroke1 = ctx2.createLinearGradient(0, 230, 0, 50);
+
+    gradientStroke1.addColorStop(1, 'rgba(203,12,159,0.2)');
+    gradientStroke1.addColorStop(0.2, 'rgba(72,72,176,0.0)');
+    gradientStroke1.addColorStop(0, 'rgba(203,12,159,0)'); //purple colors
+
+    //var gradientStroke2 = ctx2.createLinearGradient(0, 230, 0, 50);
+    //
+    //gradientStroke2.addColorStop(1, 'rgba(20,23,39,0.2)');
+    //gradientStroke2.addColorStop(0.2, 'rgba(72,72,176,0.0)');
+    //gradientStroke2.addColorStop(0, 'rgba(20,23,39,0)'); //purple colors
+
+    var commit_chart = new Chart(ctx2, {
+        type: "line",
+        data: {
+            labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            datasets: [{
+                label: "Commit Activity",
+                tension: 0.4,
+                borderWidth: 0,
+                pointRadius: 0,
+                borderColor: "#cb0c9f",
+                borderWidth: 3,
+                backgroundColor: gradientStroke1,
+                fill: true,
+                data: [50, 40, 300, 700, 500, 250, 400, 230, 500, 0],
+                maxBarThickness: 6
+
+            },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false,
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index',
+            },
+            scales: {
+                y: {
+                    grid: {
+                        drawBorder: false,
+                        display: true,
+                        drawOnChartArea: true,
+                        drawTicks: false,
+                        borderDash: [5, 5]
+                    },
+                    ticks: {
+                        display: true,
+                        padding: 10,
+                        color: '#b2b9bf',
+                        font: {
+                            size: 11,
+                            family: "Open Sans",
+                            style: 'normal',
+                            lineHeight: 2
+                        },
+                    }
+                },
+                x: {
+                    grid: {
+                        drawBorder: false,
+                        display: false,
+                        drawOnChartArea: false,
+                        drawTicks: false,
+                        borderDash: [5, 5]
+                    },
+                    ticks: {
+                        display: true,
+                        color: '#b2b9bf',
+                        padding: 20,
+                        font: {
+                            size: 11,
+                            family: "Open Sans",
+                            style: 'normal',
+                            lineHeight: 2
+                        },
+                    }
+                },
+            },
+        },
+    });
+
+    var commit_weeks = []
+    var commit_totals = []
+
+    function updateCommitChart(weeks, totals) {
+        // Function to format epoch timestamp to "Month Day - Month Day" format
+        function formatWeekRange(epoch) {
+            const start = new Date(epoch * 1000); // Convert seconds to milliseconds
+            const end = new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000); // Add 6 days for the end of the week
+
+            const startFormatted = start.toLocaleDateString('en-US', { month: 'short', year: 'numeric', day: 'numeric' });
+            const endFormatted = end.toLocaleDateString('en-US', { day: 'numeric' });
+
+            return `${startFormatted.split(" ")[0]} ${startFormatted.split(" ")[2]} | ${startFormatted.split(" ")[1].replace(',', '')} - ${endFormatted}`;
+        }
+
+        // Convert each week value to formatted date range
+        const formattedWeeks = weeks.map(formatWeekRange);
+
+        commit_chart.data.labels = formattedWeeks;
+        commit_chart.data.datasets[0].data = totals;
+
+        commit_chart.update();
+    }
+
+    function filterCommitData() {
+        const startdate = document.getElementById('startdate');
+        const enddate = document.getElementById('enddate');
+        const startDateEpoch = new Date(startdate.value).getTime() / 1000;
+        const endDateEpoch = new Date(enddate.value).getTime() / 1000;
+
+        function getIndicesForDateRange(startEpoch, endEpoch, weeksArray) {
+            let startIndex = null;
+            let endIndex = null;
+
+            for (let i = 0; i < weeksArray.length; i++) {
+                const week = weeksArray[i];
+
+                if (week >= startEpoch && startIndex == null) {
+                    console.log(week, startEpoch)
+                    startIndex = i;
+                }
+
+                if (week <= endEpoch) {
+                    endIndex = i;
+                } else {
+                    break; // Stop searching once we're past the end date
+                }
+            }
+
+            return { startIndex, endIndex };
+        }
+
+        const { startIndex, endIndex } = getIndicesForDateRange(startDateEpoch, endDateEpoch, commit_weeks);
+
+        const filterWeeks = commit_weeks.slice(startIndex, endIndex + 1)
+        const filterDatapoints = commit_totals.slice(startIndex, endIndex + 1);
+
+        //console.log(commit_weeks)
+        //console.log(startdate)
+        //console.log(enddate)
+        //console.log(startDateEpoch)
+        //console.log(endDateEpoch)
+        //console.log(startIndex)
+        //console.log(endIndex)
+        //console.log(filterWeeks)
+        //console.log(filterDatapoints)
+
+        updateCommitChart(filterWeeks, filterDatapoints);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var clickableItems = document.querySelectorAll('.clickable');
+
+        var enable = true
+
+        clickableItems.forEach(function (item) {
+            item.addEventListener('click', function () {
+                if (!enable)
+                    return
+                enable = false
+                // Remove the 'active' class from all items
+                clickableItems.forEach(function (otherItem) {
+                    otherItem.classList.remove('active');
+                });
+
+                // Add the 'active' class to the clicked item
+                item.classList.add('active');
+
+                // Retrieve the repository URL and item ID from the data attributes
+                var repoUrl = item.getAttribute('data-repo-url');
+                var itemId = item.getAttribute('data-item-id');
+
+                var spinner = document.getElementById(`spinner-${itemId}`);
+                spinner.classList.remove('d-none');
+
+                // Make an AJAX request to the Django view with the repository ID
+                $.ajax({
+                    type: 'POST',
+                    url: '/choose_repo/',  // Replace with your Django view URL
+                    data: {
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                        repo_id: itemId,
+                    },
+                    success: function (response) {
+                        console.log('Repo Chosen:', response);
+                        // Update the HTML with the received data
+                        //var repoDetailsDiv = document.getElementById('repoDetails');
+                        //var owner = JSON.parse(response.owner);
+                        //if (items && typeof items.username !== 'undefined')
+
+                        // Extracting total and week values into separate arrays
+                        commit_weeks = response.commit_activity[0].map(week => week.week);
+                        commit_totals = response.commit_activity[0].map(week => week.total);
+
+                        updateCommitChart(commit_weeks, commit_totals);
+
+                        spinner.classList.add('d-none');
+                        enable = true
+                    },
+                    error: function (error) {
+                        console.error('Error choosing repo:', error);
+                        spinner.classList.add('d-none');
+                        enable = true
+                    },
+                });
+            });
+        });
+    });
+</script>
+
 <script>
     var ctx = document.getElementById("chart-bars").getContext("2d");
-
     new Chart(ctx, {
         type: "bar",
         data: {
@@ -835,109 +1106,23 @@
             },
         },
     });
-
-
-    var ctx2 = document.getElementById("chart-line").getContext("2d");
-
-    var gradientStroke1 = ctx2.createLinearGradient(0, 230, 0, 50);
-
-    gradientStroke1.addColorStop(1, 'rgba(203,12,159,0.2)');
-    gradientStroke1.addColorStop(0.2, 'rgba(72,72,176,0.0)');
-    gradientStroke1.addColorStop(0, 'rgba(203,12,159,0)'); //purple colors
-
-    var gradientStroke2 = ctx2.createLinearGradient(0, 230, 0, 50);
-
-    gradientStroke2.addColorStop(1, 'rgba(20,23,39,0.2)');
-    gradientStroke2.addColorStop(0.2, 'rgba(72,72,176,0.0)');
-    gradientStroke2.addColorStop(0, 'rgba(20,23,39,0)'); //purple colors
-
-    new Chart(ctx2, {
-        type: "line",
-        data: {
-            labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-            datasets: [{
-                label: "Mobile apps",
-                tension: 0.4,
-                borderWidth: 0,
-                pointRadius: 0,
-                borderColor: "#cb0c9f",
-                borderWidth: 3,
-                backgroundColor: gradientStroke1,
-                fill: true,
-                data: [50, 40, 300, 700, 500, 250, 400, 230, 500],
-                maxBarThickness: 6
-
-            },
-            {
-                label: "Websites",
-                tension: 0.4,
-                borderWidth: 0,
-                pointRadius: 0,
-                borderColor: "#575f9a",
-                borderWidth: 3,
-                backgroundColor: gradientStroke2,
-                fill: true,
-                data: [30, 90, 40, 140, 290, 290, 340, 230, 400],
-                maxBarThickness: 6
-            },
-            ],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false,
-                }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index',
-            },
-            scales: {
-                y: {
-                    grid: {
-                        drawBorder: false,
-                        display: true,
-                        drawOnChartArea: true,
-                        drawTicks: false,
-                        borderDash: [5, 5]
-                    },
-                    ticks: {
-                        display: true,
-                        padding: 10,
-                        color: '#b2b9bf',
-                        font: {
-                            size: 11,
-                            family: "Open Sans",
-                            style: 'normal',
-                            lineHeight: 2
-                        },
-                    }
-                },
-                x: {
-                    grid: {
-                        drawBorder: false,
-                        display: false,
-                        drawOnChartArea: false,
-                        drawTicks: false,
-                        borderDash: [5, 5]
-                    },
-                    ticks: {
-                        display: true,
-                        color: '#b2b9bf',
-                        padding: 20,
-                        font: {
-                            size: 11,
-                            family: "Open Sans",
-                            style: 'normal',
-                            lineHeight: 2
-                        },
-                    }
-                },
-            },
-        },
-    });
 </script>
+
+<!-- <script>
+    var item_json = '{{ items|escapejs }}'
+    if (item_json) {
+        var items = JSON.parse(item_json);
+
+        if (items && typeof items.username !== 'undefined') {
+            if (items.auth) {
+                alert('Welcome, ' + items.username + '!');
+            } else {
+                alert('Guest user');
+            }
+        } else {
+            console.error('Error: items is not in the expected format');
+        }
+    }
+</script> -->
 
 {% endblock scripts %}
