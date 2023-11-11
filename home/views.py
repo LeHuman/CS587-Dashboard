@@ -28,7 +28,7 @@ def request_repository(user, access_token: str, repo_id: int):
         pass
     print(f"Repo {repo_id} not found!")
     repo = get_repository(access_token, repo_id)
-    repo = GitHubRepositoryModel(user=user, repo=repo)
+    repo = GitHubRepositoryModel(usr=user, repo=repo)
     repo.save()
     return repo.dump()
 
@@ -56,8 +56,6 @@ def finish_login(request, access_token):
     # print(access_token)
     print('Requesting Profile')
     gh, gh_usr, request.session["profile"] = request_profile(access_token=access_token)
-    print(gh_usr.owned_private_repos_count)
-    print(gh_usr.total_private_repos_count)
     print('Done')
     try:
         # IMPROVE: update periodically, instead on each logon

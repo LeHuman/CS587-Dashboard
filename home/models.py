@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 from time import sleep
 from typing import Callable
+import concurrent.futures
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -36,10 +37,10 @@ def iter_long(gi: Callable, *args, **kwargs) -> list:
     fnl = list(it)
     while it.last_status == 202:
         print('Waiting for 202')
-        sleep(5)  # IMPROVE: sleeping
+        sleep(3)  # IMPROVE: sleeping
         it = gi(*args, **kwargs)
         fnl = list(it)
-    print(fnl)
+    # print(fnl)
     return fnl
 
 
@@ -68,32 +69,47 @@ class GitHubRepositoryModel(models.Model):
     branches = models.JSONField(default=list)
     branch_count = models.IntegerField(default=1)
 
-    def __init__(self,  user: User, _id=None, cached_at=None, owner=None, name=None, full_name=None, description=None, created_at=None, updated_at=None, homepage=None,
+    def __init__(self,  usr: User, _id=None, cached_at=None, owner=None, name=None, full_name=None, description=None, created_at=None, updated_at=None, homepage=None,
                  language=None, archived=None, forks_count=None, open_issues_count=None, watchers_count=None, url=None, collaborators=None, collaborators_access=None, commit_activity=None,
                  commits=None, code_freq=None, branches=None, branch_count=None, repo: Repository | None = None):
         super().__init__()
-        if isinstance(user, User):
-            self.user = user
+        if isinstance(usr, User):
+            self.user = usr
 
         if repo:
+
             owner = str_short_user(repo.owner)
 
-            commit_activity = iter_long(repo.commit_activity)
-            code_frequency = iter_long(repo.code_frequency)
+            def get_colabs():
+                try:
+                    collaborators = [str_short_user(x) for x in repo.collaborators()]
+                except ForbiddenError as fe:
+                    collaborators = []
+                    print(fe)
+                return collaborators
 
-            try:
-                collaborators = [str_short_user(x) for x in repo.collaborators()]
-            except ForbiddenError as fe:
-                collaborators = []
-                print(fe)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                # Submit the tasks to the executor
+                future1 = executor.submit(iter_long, repo.commit_activity)
+                future2 = executor.submit(iter_long, repo.code_frequency)
+                future3 = executor.submit(get_colabs)
 
-            commits = {}
+                # Wait for all tasks to complete
+                concurrent.futures.wait([future3])
+                collaborators = future3.result()
+                
+                commits = {}
+                for usr in collaborators + [owner]:
+                    commits[usr['login']] = [int(get_gh_datetime(x.commit.committer['date']).timestamp()) for x in repo.commits(author=usr['login'])]
+                    sleep(1)
+                
+                concurrent.futures.wait([future1, future2])
 
-            for user in collaborators + [owner]:
-                commits[user['login']] = [int(get_gh_datetime(x.commit.committer['date']).timestamp()) for x in repo.commits(author=user['login'])]
-                sleep(1)
+                # Retrieve results
+                commit_activity = future1.result()
+                code_frequency = future2.result()
 
-            #print('\n'.join(f'{key}: {len(array)}' for key, array in commits.items()))
+            # print('\n'.join(f'{key}: {len(array)}' for key, array in commits.items()))
 
             self.id = repo.id
             self.cached_at = now()
