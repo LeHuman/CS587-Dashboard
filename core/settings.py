@@ -198,6 +198,9 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Time in seconds to invalidate cached repos
+CACHE_INVALIDATE = int(os.getenv('CACHE_INVALIDATE', str(60*60)))
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/

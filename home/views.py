@@ -1,10 +1,13 @@
 """View source file"""
 
+from concurrent.futures import InvalidStateError
 import json
 import secrets
+from subprocess import TimeoutExpired
 import requests
 
 from django.shortcuts import render
+from django.utils.timezone import now
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.contrib.auth.models import User
@@ -22,11 +25,16 @@ from .models import GitHubRepositoryModel
 def request_repository(user, access_token: str, repo_id: int):
     try:
         repo = GitHubRepositoryModel.objects.get(id=repo_id).dump()
+
+        if now().timestamp()-repo['cached_at'].timestamp() > settings.CACHE_INVALIDATE:
+            raise InvalidStateError()
+
         print(f"Repo {repo_id} cached!")
         return repo
     except GitHubRepositoryModel.DoesNotExist:
-        pass
-    print(f"Repo {repo_id} not found!")
+        print(f"Repo {repo_id} not found!")
+    except InvalidStateError:
+        print(f"Repo {repo_id} invalidated!")
     repo = get_repository(access_token, repo_id)
     repo = GitHubRepositoryModel(usr=user, repo=repo)
     repo.save()
@@ -47,7 +55,7 @@ def choose_repo(request):
 
         except Exception as e:
             raise e
-            return JsonResponse({'error': 'Repository not found'})
+            # return JsonResponse({'error': 'Repository not found'})
 
     return JsonResponse({'error': 'Invalid request'})
 

@@ -9,6 +9,7 @@ from github3.users import ShortUser
 from github3.events import Event
 from github3.repos import ShortRepository, Repository
 from github3.repos.commit import ShortCommit
+from github3.pulls import ShortPullRequest
 
 
 def get_datetime_str(dt: datetime | str | None) -> dict[str, str]:
@@ -65,6 +66,25 @@ def get_user(token: str) -> Tuple[GitHub, AuthenticatedUser]:
         raise Github3APIError
 
     return gh, me
+
+
+def str_short_pull_request(pull: ShortPullRequest) -> dict[str, Any]:
+    """Returns a github3 ShortPullRequest as a string dictionary
+
+    Args:
+        usr (ShortPullRequest): The given ShortPullRequest
+
+    Returns:
+        dict[str, Any]: ShortPullRequest as a string dictionary
+    """
+    return {
+        'id': pull.id,
+        'user': pull.user.login,
+        'title': pull.title,
+        'body': pull.body,
+        'created_at': int(pull.created_at.timestamp()) if pull.created_at else 0,
+        'updated_at': int(pull.updated_at.timestamp()) if pull.updated_at else 0,
+    }
 
 
 def str_short_user(usr: ShortUser) -> dict[str, str]:

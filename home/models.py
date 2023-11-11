@@ -18,7 +18,7 @@ from github3.repos import Repository
 from github3.repos.branch import Branch
 from github3.structs import GitHubIterator
 
-from .github_api import str_short_user
+from .github_api import str_short_user, str_short_pull_request
 
 
 def get_gh_datetime(dt: str | datetime | None) -> datetime:
@@ -58,7 +58,9 @@ class GitHubRepositoryModel(models.Model):
     language = models.CharField(max_length=255)
     archived = models.BooleanField()
     forks_count = models.IntegerField()
-    open_issues_count = models.IntegerField()
+    open_issues_count = models.IntegerField(default=0)
+    pull_requests_count = models.IntegerField(default=0)
+    pull_requests = models.JSONField(default=list)
     watchers_count = models.IntegerField()
     url = models.URLField()
     collaborators = models.JSONField(default=list)
@@ -70,7 +72,7 @@ class GitHubRepositoryModel(models.Model):
     branch_count = models.IntegerField(default=1)
 
     def __init__(self,  usr: User, _id=None, cached_at=None, owner=None, name=None, full_name=None, description=None, created_at=None, updated_at=None, homepage=None,
-                 language=None, archived=None, forks_count=None, open_issues_count=None, watchers_count=None, url=None, collaborators=None, collaborators_access=None, commit_activity=None,
+                 language=None, archived=None, forks_count=None, open_issues_count=None, pull_requests_count=None, pull_requests=None, watchers_count=None, url=None, collaborators=None, collaborators_access=None, commit_activity=None,
                  commits=None, code_freq=None, branches=None, branch_count=None, repo: Repository | None = None):
         super().__init__()
         if isinstance(usr, User):
@@ -83,31 +85,36 @@ class GitHubRepositoryModel(models.Model):
             def get_colabs():
                 try:
                     collaborators = [str_short_user(x) for x in repo.collaborators()]
+                    return collaborators, True
                 except ForbiddenError as fe:
                     collaborators = []
                     print(fe)
-                return collaborators
+                    return collaborators, False
 
-            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
                 # Submit the tasks to the executor
                 future1 = executor.submit(iter_long, repo.commit_activity)
                 future2 = executor.submit(iter_long, repo.code_frequency)
                 future3 = executor.submit(get_colabs)
+                future4 = executor.submit(repo.pull_requests, state='open', sort='updated')
 
                 # Wait for all tasks to complete
                 concurrent.futures.wait([future3])
-                collaborators = future3.result()
-                
+                collaborators, collaborators_access = future3.result()
+
                 commits = {}
                 for usr in collaborators + [owner]:
-                    commits[usr['login']] = [int(get_gh_datetime(x.commit.committer['date']).timestamp()) for x in repo.commits(author=usr['login'])]
+                    commits[usr['login']] = [int(get_gh_datetime(x.commit.committer['date']).timestamp())
+                                             for x in repo.commits(author=usr['login'])]
                     sleep(1)
-                
-                concurrent.futures.wait([future1, future2])
+
+                concurrent.futures.wait([future1, future2, future4])
 
                 # Retrieve results
                 commit_activity = future1.result()
                 code_frequency = future2.result()
+                pull_requests = [str_short_pull_request(x) for x in future4.result()]
+                pull_requests_count = len(pull_requests)
 
             # print('\n'.join(f'{key}: {len(array)}' for key, array in commits.items()))
 
@@ -124,10 +131,12 @@ class GitHubRepositoryModel(models.Model):
             self.archived = bool(repo.archived)
             self.forks_count = int(repo.forks_count)
             self.open_issues_count = int(repo.open_issues_count)
+            self.pull_requests_count = int(pull_requests_count)
+            self.pull_requests = pull_requests
             self.watchers_count = int(repo.watchers_count)
             self.url = str(repo.html_url)
             self.collaborators = collaborators
-            self.collaborators_access = False
+            self.collaborators_access = collaborators_access
             self.commit_activity = commit_activity
             self.commits = commits
             self.code_freq = code_frequency
@@ -147,6 +156,8 @@ class GitHubRepositoryModel(models.Model):
             self.archived = archived
             self.forks_count = forks_count
             self.open_issues_count = open_issues_count
+            self.pull_requests_count = pull_requests_count
+            self.pull_requests = pull_requests
             self.watchers_count = watchers_count
             self.url = url
             self.collaborators = collaborators
@@ -160,6 +171,7 @@ class GitHubRepositoryModel(models.Model):
     def dump(self):
         return {
             "id": self.id,
+            "cached_at": self.cached_at,
             "owner": self.owner,
             "name": self.name,
             "full_name": self.full_name,
@@ -171,11 +183,14 @@ class GitHubRepositoryModel(models.Model):
             "archived": self.archived,
             "forks_count": self.forks_count,
             "open_issues_count": self.open_issues_count,
+            "pull_requests_count": self.pull_requests_count,
+            "pull_requests": self.pull_requests,
             "watchers_count": self.watchers_count,
             "url": self.url,
             "collaborators": self.collaborators,
             "collaborators_access": self.collaborators_access,
             "commit_activity": self.commit_activity,
+            "commits": self.commits,
             "code_freq": self.code_freq,
             "branches": self.branches,
             "branch_count": self.branch_count,
