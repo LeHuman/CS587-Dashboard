@@ -22,9 +22,12 @@ from .github_api import request_profile, get_repository
 from .models import GitHubRepositoryModel
 
 
-def request_repository(user, access_token: str, repo_id: int):
+def request_repository(user, access_token: str, repo_id: int | None = None, repo_owner: str | None = None, repo_name: str | None = None):
     try:
-        repo = GitHubRepositoryModel.objects.get(id=repo_id).dump()
+        if repo_owner:
+            repo = GitHubRepositoryModel.objects.get(full_name=f'{repo_owner}/{repo_name}').dump()
+        else:
+            repo = GitHubRepositoryModel.objects.get(id=repo_id).dump()
 
         if now().timestamp()-repo['cached_at'].timestamp() > settings.CACHE_INVALIDATE:
             raise InvalidStateError()
@@ -35,7 +38,10 @@ def request_repository(user, access_token: str, repo_id: int):
         print(f"Repo {repo_id} not found!")
     except InvalidStateError:
         print(f"Repo {repo_id} invalidated!")
-    repo = get_repository(access_token, repo_id)
+    if repo_owner:
+        repo = get_repository(access_token, repo_owner=repo_owner, repo_name=repo_name)
+    elif repo_id:
+        repo = get_repository(access_token, repo_id)
     repo = GitHubRepositoryModel(usr=user, repo=repo)
     repo.save()
     return repo.dump()
@@ -43,19 +49,18 @@ def request_repository(user, access_token: str, repo_id: int):
 
 def choose_repo(request):
     if request.method == 'POST':
-        repo_id = request.POST.get('repo_id')
+        repo_id = int(request.POST.get('repo_id'))
+        access_token = request.session["access_token"]
 
-        try:
-            repo_id = int(repo_id)
-            access_token = request.session["access_token"]
-
-            repo = request_repository(request.user, access_token, repo_id)
-
+        if (repo_id == 0):
+            repo_owner = request.POST.get('repo_owner')
+            repo_name = request.POST.get('repo_name')
+            repo = request_repository(request.user, access_token, repo_owner=repo_owner, repo_name=repo_name)
             return JsonResponse(repo)
 
-        except Exception as e:
-            raise e
-            # return JsonResponse({'error': 'Repository not found'})
+        repo = request_repository(request.user, access_token, repo_id)
+        return JsonResponse(repo)
+        # return JsonResponse({'error': 'Repository not found'})
 
     return JsonResponse({'error': 'Invalid request'})
 

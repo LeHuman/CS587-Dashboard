@@ -15,9 +15,9 @@
     {% endblock title %}
 </title>
 
-<div class="container-fluid py-4">
+<div class="container-fluid">
     <div class="row">
-        <div class="col-xl-3 col-sm-6 ms-2">
+        <div class="ms-2">
             {% if user.is_authenticated %}
             <h3>Hi {{ user.username }}!</h3>
             {% else %}
@@ -131,94 +131,43 @@
             </div>
         </div>
     </div>
-    <!-- <div class="row mt-xl-4 mt-1">
-        <div class="col-xl-3 col-sm-6">
-            <div class="card">
-                <div class="card-body p-3">
-                    <div class="row">
-                        <div class="col-8">
-                            <div class="numbers">
-                                <p class="text-sm mb-0 text-capitalize font-weight-bold">API Limit</p>
-                                <h5 class="font-weight-bolder mb-0">
-                                    {% if user.is_authenticated and request.session.profile.api_limit%}
-                                    {{request.session.profile.api_limit}}
-                                    {% else %}
-                                    0
-                                    {% endif %}
-                                </h5>
-                            </div>
-                        </div>
-                        <div class="col-4 text-end">
-                            <div class="icon icon-shape bg-gradient-primary shadow text-center border-radius-md">
-                                <i class="ni ni-key-25 text-lg opacity-10" aria-hidden="true"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div> -->
-
     <div class="row mt-4">
         <div class="col-lg-5 mb-lg-0 mb-4">
             <div class="card z-index-2">
                 <div class="card-header pb-0">
                     <h6 id="chart-main-title">Select a Repository</h6>
-                    <!-- <button id="toggleButton" class="btn" data-bs-toggle="collapse"
-                        data-bs-target="#chart-main-controls" aria-expanded="false" aria-controls="chart-main-controls"
-                        style="transition: transform 0.3s ease-in-out;">
-                        <i class="fas fa-arrow-up"></i>
-                    </button> -->
-                    <!-- <i id="toggleButton" data-bs-toggle="collapse" data-bs-target="#chart-main-controls"
-                        aria-expanded="false" aria-controls="chart-main-controls"
-                        style="transition: transform 0.3s ease-in-out;" class="fas fa-arrow-up"></i>
-                    <script>
-                        const toggleButton = document.getElementById('toggleButton');
-                        let isArrowUp = true;
-
-                        toggleButton.addEventListener('click', function () {
-                            if (isArrowUp) {
-                                toggleButton.style.transform = 'rotate(180deg)';
-                            } else {
-                                toggleButton.style.transform = 'rotate(0deg)';
-                            }
-
-                            isArrowUp = !isArrowUp;
-                        });
-                    </script> -->
-                    <!-- class="collapse" -->
                     <div id="chart-main-controls">
                         <div>
-                            <button onclick="set_chart('Commit Activity')" type="button" class="btn btn-secondary">
+                            <button onclick="set_chart('Commit Activity')" type="button" class="btn btn-sm btn-secondary">
                                 Commit Activity
                             </button>
-                            <button onclick="set_chart('Code Frequency')" type="button" class="btn btn-secondary">
+                            <button onclick="set_chart('Code Frequency')" type="button" class="btn btn-sm btn-secondary">
                                 Code Frequency
                             </button>
                         </div>
                         <div>
                             <button onclick="changeTimeRange_ext('chart-main', 0)" type="button"
-                                class="btn btn-primary">
+                                class="btn btn-primary btn-sm">
                                 1 Day
                             </button>
                             <button onclick="changeTimeRange_ext('chart-main', 1)" type="button"
-                                class="btn btn-primary">
+                                class="btn btn-primary btn-sm">
                                 1 Week
                             </button>
                             <button onclick="changeTimeRange_ext('chart-main', 2)" type="button"
-                                class="btn btn-primary">
+                                class="btn btn-primary btn-sm">
                                 1 Month
                             </button>
                             <button onclick="changeTimeRange_ext('chart-main', 3)" type="button"
-                                class="btn btn-primary">
+                                class="btn btn-primary btn-sm">
                                 6 Months
                             </button>
                             <button onclick="changeTimeRange_ext('chart-main', 4)" type="button"
-                                class="btn btn-primary">
+                                class="btn btn-primary btn-sm">
                                 1 Year
                             </button>
                             <button onclick="changeTimeRange_ext('chart-main', 5)" type="button"
-                                class="btn btn-primary">
+                                class="btn btn-primary btn-sm">
                                 Max
                             </button>
                         </div>
@@ -226,52 +175,15 @@
                 </div>
                 <div class="card-body p-3">
                     <div class="chart">
-                        <canvas id="chart-main" class="chart-canvas" height="300"></canvas>
+                        <canvas id="chart-main" class="chart-canvas" height="225px"></canvas>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-lg-7">
-            <input type="text" id="repoSearch" class="form-control mb-3" placeholder="Search by repo name">
-            <!-- TODO: Fuzzy search -->
-            <!-- <script src="https://cdn.jsdelivr.net/npm/fuse.js"></script>
-                <script>
-                    document.addEventListener('DOMContentLoaded', function () {
-                        const repoList = Array.from(document.querySelectorAll('#itemList .list-group-item')).map(repo => {
-                            return {
-                                element: repo,
-                                name: repo.getAttribute('data-item-repo-name').toLowerCase(),
-                                author: repo.getAttribute('data-item-owner-login').toLowerCase(),
-                                description: repo.getAttribute('data-item-repo-desc').toLowerCase(),
-                            };
-                        });
-    
-                        const fuseOptions = {
-                            keys: ['name', 'author', 'description'],
-                            includeScore: true,
-                        };
-    
-                        const fuse = new Fuse(repoList, fuseOptions);
-    
-                        document.getElementById('repoSearch').addEventListener('input', function () {
-                            const searchQuery = this.value.toLowerCase();
-    
-                            const result = fuse.search(searchQuery);
-    
-                            result.sort((a, b) => a.score - b.score);
-    
-                            repoList.forEach(repo => {
-                                repo.element.classList.add('d-none');
-                            });
-    
-                            result.forEach(item => {
-                                console.log(item)
-                                item.item.element.classList.remove('d-none');
-                            });
-                        });
-                    });
-                </script> -->
-            <div class="overflow-auto" style="max-height: 400px;">
+            <input type="text" id="repoSearch" class="form-control mb-3" placeholder="Search by repo name or repo URL">
+            <div class="overflow-auto" style="max-height: 350px;">
+                <div id="linked-repo"></div>
                 <ul class="list-group" id="itemList">
                     {% if user.is_authenticated %}
                     {% for repo in request.session.profile.repos %}
@@ -309,7 +221,6 @@
             </div>
         </div>
     </div>
-
     <div class="row mt-4">
         <div class="col-lg-4 mb-lg-0 mb-4">
             <div class="card z-index-2">
@@ -512,12 +423,7 @@
             </div>
         </div>
     </div>
-    <!-- <div class="row my-4">
-
-    </div> -->
-
     {% include "includes/footer.html" %}
-
 </div>
 
 {% endblock content %}
@@ -527,23 +433,6 @@
 
 <script src="{% static 'js/jquery.min.js' %}"></script>
 <script src="{% static 'js/plugins/chartjs.min.js' %}"></script>
-
-<script>
-    document.getElementById('repoSearch').addEventListener('input', function () {
-        const searchQuery = this.value.toLowerCase();
-
-        const repos = document.querySelectorAll('#itemList .list-group-item');
-
-        repos.forEach(function (repo) {
-            const name = repo.getAttribute('data-item-repo-name').toLowerCase();
-            const author = repo.getAttribute('data-item-owner-login').toLowerCase();
-            const description = repo.getAttribute('data-item-repo-desc').toLowerCase();
-
-            const shouldShow = name.includes(searchQuery) || author.includes(searchQuery) || description.includes(searchQuery);
-            repo.style.display = shouldShow ? 'block' : 'none';
-        });
-    });
-</script>
 
 <script>
     var charts = {
@@ -643,7 +532,6 @@
 
         return date.toLocaleString('en-US', options);
     }
-
 
     function updateChart(chart_id, y_arr = null, x_arr = null) {
         const chart_i = charts.id[chart_id]
@@ -812,6 +700,92 @@
 </script>
 
 <script>
+    function repo_success(response) {
+        code_id = newChartInterface('Code Frequency', 'chart-main', ['Additions', 'Subtractions'], ['#159e11', '#d11717'], formatWeekEpoch);
+        commit_id = newChartInterface('Commit Activity', 'chart-main', ['Commit Activity'], ['#cb0c9f'], formatDayEpoch);
+
+        const dayCountsArray = [];
+        const dailyEpochsArray = [];
+        response.commit_activity.forEach(dayData => {
+            // Extract day counts and starting epoch from each dayData object
+            const dayCounts = dayData.days;
+            const startOfWeekEpoch = dayData.week;
+
+            // Calculate daily epochs based on the start of the week
+            const dailyEpochs = dayCounts.map((count, index) => startOfWeekEpoch + index * 24 * 60 * 60);
+
+            // Push the values to the respective arrays
+            dayCounts.forEach(count => dayCountsArray.push(count));
+            dailyEpochs.forEach(epoch => dailyEpochsArray.push(epoch));
+
+        });
+
+        var open_issues = document.getElementById(`open-issues-counter`);
+        var pull_requests = document.getElementById(`pull-requests-counter`);
+        var collaborators = document.getElementById(`collaborators-counter`);
+        var branches = document.getElementById(`branches-counter`);
+        var collaborator_table = document.getElementById(`collaborator-table`);
+
+        open_issues.innerHTML = response.open_issues_count
+        pull_requests.innerHTML = response.pull_requests_count
+        branches.innerHTML = response.branches.length
+
+        function find_login_user(login) {
+            for (const user of response.collaborators) {
+                if (user.login == login)
+                    return user
+            }
+            return null
+        }
+
+        if (response.collaborators_access) {
+            collaborators.innerHTML = response.collaborators.length
+            new_table = ''
+
+            for (const [login, commits] of Object.entries(response.commits)) {
+                user = find_login_user(login);
+                last_commit = 'No Commits'
+                if (user == null)
+                    continue;
+                if (commits.length != 0) {
+                    last_commit = formatPreciseEpoch(commits[0]);
+                }
+                new_table += `
+                <tr>
+                    <td>
+                        <div class="d-flex px-3 py-1">
+                            <a href="${user.url}" target="_blank" class="avatar avatar-xs rounded-circle"
+                                data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                title="${login}">
+                                <img src="${user.avatar_url}" alt="team1">
+                            </a>
+                        </div>
+                    </td>
+                    <td>
+                        <h6 class="mb-0 text-sm">${commits.length}</h6>
+                    </td>
+                    <td class="align-middle text-center text-sm">
+                        <span class="text-xs text-dark font-weight-bold">${last_commit}</span>
+                    </td>
+                </tr>`
+            }
+            collaborator_table.innerHTML = new_table;
+
+        } else {
+            collaborators.innerHTML = 'No Access'
+        }
+
+        charts.raw[commit_id].raw_y = dailyEpochsArray
+        charts.raw[commit_id].raw_x = [dayCountsArray]
+
+        charts.raw[code_id].raw_y = response.code_freq.map(week => week[0]);
+        charts.raw[code_id].raw_x = [response.code_freq.map(week => week[1]), response.code_freq.map(week => week[2])]
+
+        set_chart(commit_id);
+
+        searching = false
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         var clickableItems = document.querySelectorAll('.clickable');
 
@@ -839,7 +813,6 @@
                 spinner.classList.remove('d-none');
                 error_icon.classList.add('d-none');
 
-                // Make an AJAX request to the Django view with the repository ID
                 $.ajax({
                     type: 'POST',
                     url: '/choose_repo/',  // Replace with your Django view URL
@@ -848,90 +821,7 @@
                         repo_id: itemId,
                     },
                     success: function (response) {
-                        //console.log('Repo Chosen:', response);
-
-                        code_id = newChartInterface('Code Frequency', 'chart-main', ['Additions', 'Subtractions'], ['#159e11', '#d11717'], formatWeekEpoch);
-                        commit_id = newChartInterface('Commit Activity', 'chart-main', ['Commit Activity'], ['#cb0c9f'], formatDayEpoch);
-
-                        const dayCountsArray = [];
-                        const dailyEpochsArray = [];
-                        response.commit_activity.forEach(dayData => {
-                            // Extract day counts and starting epoch from each dayData object
-                            const dayCounts = dayData.days;
-                            const startOfWeekEpoch = dayData.week;
-
-                            // Calculate daily epochs based on the start of the week
-                            const dailyEpochs = dayCounts.map((count, index) => startOfWeekEpoch + index * 24 * 60 * 60);
-
-                            // Push the values to the respective arrays
-                            dayCounts.forEach(count => dayCountsArray.push(count));
-                            dailyEpochs.forEach(epoch => dailyEpochsArray.push(epoch));
-
-                        });
-
-                        var open_issues = document.getElementById(`open-issues-counter`);
-                        var pull_requests = document.getElementById(`pull-requests-counter`);
-                        var collaborators = document.getElementById(`collaborators-counter`);
-                        var branches = document.getElementById(`branches-counter`);
-                        var collaborator_table = document.getElementById(`collaborator-table`);
-
-                        open_issues.innerHTML = response.open_issues_count
-                        pull_requests.innerHTML = response.pull_requests_count
-                        branches.innerHTML = response.branches.length
-
-                        function find_login_user(login) {
-                            for (const user of response.collaborators) {
-                                if (user.login == login)
-                                    return user
-                            }
-                            return null
-                        }
-
-                        if (response.collaborators_access) {
-                            collaborators.innerHTML = response.collaborators.length
-                            new_table = ''
-
-                            for (const [login, commits] of Object.entries(response.commits)) {
-                                user = find_login_user(login);
-                                last_commit = 'No Commits'
-                                if (user == null)
-                                    continue;
-                                if (commits.length != 0) {
-                                    last_commit = formatPreciseEpoch(commits[0]);
-                                }
-                                new_table += `
-                                <tr>
-                                    <td>
-                                        <div class="d-flex px-3 py-1">
-                                            <a href="${user.url}" class="avatar avatar-xs rounded-circle"
-                                                data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                title="${login}">
-                                                <img src="${user.avatar_url}" alt="team1">
-                                            </a>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h6 class="mb-0 text-sm">${commits.length}</h6>
-                                    </td>
-                                    <td class="align-middle text-center text-sm">
-                                        <span class="text-xs text-dark font-weight-bold">${last_commit}</span>
-                                    </td>
-                                </tr>`
-                            }
-                            collaborator_table.innerHTML = new_table;
-
-                        } else {
-                            collaborators.innerHTML = 'No Access'
-                        }
-
-                        charts.raw[commit_id].raw_y = dailyEpochsArray
-                        charts.raw[commit_id].raw_x = [dayCountsArray]
-
-                        charts.raw[code_id].raw_y = response.code_freq.map(week => week[0]);
-                        charts.raw[code_id].raw_x = [response.code_freq.map(week => week[1]), response.code_freq.map(week => week[2])]
-
-                        set_chart(commit_id);
-
+                        repo_success(response)
                         spinner.classList.add('d-none');
                         enable = true
                     },
@@ -943,6 +833,136 @@
                     },
                 });
             });
+        });
+    });
+</script>
+
+<script>
+
+    function containsGitHubRepoUrl(text) {
+        const githubRepoRegex = /https?:\/\/github\.com\/[^\s/]+\/[^\s/]+/;
+        return githubRepoRegex.test(text);
+    }
+
+    function getOwnerAndRepoFromUrl(repoUrl) {
+        const url = new URL(repoUrl);
+        const pathComponents = url.pathname.split('/').filter(Boolean);
+
+        if (pathComponents.length === 2) {
+            const [owner, repo] = pathComponents;
+            return { owner, repo };
+        } else {
+            console.error('Invalid GitHub repository URL');
+            return null;
+        }
+    }
+
+    function formatDate(dateString) {
+        const options = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: true,
+            timeZone: 'UTC',
+        };
+
+        const formattedDate = new Date(dateString).toLocaleString('en-US', options);
+        return formattedDate.replace('at', '-');
+    }
+
+    var searching = false
+
+    document.getElementById('repoSearch').addEventListener('input', function () {
+        const searchQuery = this.value.toLowerCase();
+        const repos = document.querySelectorAll('#itemList .list-group-item');
+
+        linked_repo = document.getElementById('linked-repo');
+
+        if (!searching && containsGitHubRepoUrl(this.value)) {
+            const { owner, repo } = getOwnerAndRepoFromUrl(this.value);
+
+            linked_repo.innerHTML = `<ul class="list-group" id="itemList">
+                <li class="list-group-item clickable">
+                    <div class="d-flex align-items-center">
+                        <h5 class="mb-0">${repo}</h5>
+                        <div class="spinner-border spinner-border-sm text-primary ms-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <h6 class="mb-0">${owner}</h6>
+                    </div>
+                </li>
+            </ul>`
+
+            $.ajax({
+                type: 'POST',
+                url: '/choose_repo/',  // Replace with your Django view URL
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    repo_id: 0,
+                    repo_owner: owner,
+                    repo_name: repo,
+                },
+                success: function (response) {
+                    repo_success(response);
+                    desc = '';
+                    if (response.description != 'None') {
+                        desc = `<p class="mb-1">${response.description}</p>`
+                    }
+                    linked_repo.innerHTML = `<ul class="list-group" id="itemList">
+                        <li class="list-group-item clickable">
+                            <div class="d-flex align-items-center">
+                                <h5 class="mb-0">${response.name}</h5>
+                                <a href="${response.url}" target="_blank" class="ni ni-curved-next text-lg ms-2"></a>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <a href="${response.owner.url}" target="_blank" class="avatar avatar-xs rounded-circle ms-0 me-1"
+                                data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                title="${response.owner.login}">
+                                <img src="${response.owner.avatar_url}" alt="${response.owner.login}">
+                            </a>
+                                <h6 class="mb-0">${response.owner.login}</h6>
+                            </div>
+                            ${desc}
+                            <small>${formatDate(response.updated_at)}</small>
+                        </li>
+                    </ul>`
+                    searching = false;
+                },
+                error: function (error) {
+                    searching = true;
+                    linked_repo.innerHTML = `<ul class="list-group" id="itemList">
+                        <li class="list-group-item clickable">
+                            <div class="d-flex align-items-center">
+                                <h5 class="mb-0">${repo}</h5>
+                                <i class="fa fa-exclamation text-lg ms-2" style="color: #ff1111;">
+                                    <span class="visually-hidden">Error Loading</span>
+                                </i>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <h6 class="mb-0">${owner}</h6>
+                            </div>
+                        </li>
+                    </ul>`
+                    console.error('Error choosing repo:', error);
+                },
+            });
+
+            return
+        }
+
+        linked_repo.innerHTML = '';
+
+        repos.forEach(function (repo) {
+            const name = repo.getAttribute('data-item-repo-name').toLowerCase();
+            const author = repo.getAttribute('data-item-owner-login').toLowerCase();
+            const description = repo.getAttribute('data-item-repo-desc').toLowerCase();
+
+            const shouldShow = name.includes(searchQuery) || author.includes(searchQuery) || description.includes(searchQuery);
+            repo.style.display = shouldShow ? 'block' : 'none';
         });
     });
 </script>

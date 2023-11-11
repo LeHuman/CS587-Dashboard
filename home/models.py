@@ -117,7 +117,6 @@ class GitHubRepositoryModel(models.Model):
                 pull_requests_count = len(pull_requests)
 
             # print('\n'.join(f'{key}: {len(array)}' for key, array in commits.items()))
-
             self.id = repo.id
             self.cached_at = now()
             self.owner = owner

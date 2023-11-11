@@ -169,9 +169,13 @@ def str_short_repository(repo: ShortRepository) -> dict[str, str | dict[str, str
     }
 
 
-def get_repository(access_token: str, repo_id: str | int) -> Repository | None:
+def get_repository(access_token: str, repo_id: str | int | None = None, repo_owner: str | None = None, repo_name: str | None = None) -> Repository | None:
     gh, _ = get_user(token=access_token)
-    repo = gh.repository_with_id(int(repo_id))
+
+    if repo_owner:
+        repo = gh.repository(repo_owner, repo_name)
+    else:
+        repo = gh.repository_with_id(int(repo_id))
 
     if not repo:
         print(f"Failed to get repo {repo_id}")
