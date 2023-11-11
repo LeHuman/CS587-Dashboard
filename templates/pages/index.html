@@ -17,15 +17,15 @@
 
 <div class="container-fluid py-4">
     <div class="row">
-        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+        <div class="col-xl-3 col-sm-6 ms-2">
             {% if user.is_authenticated %}
-            <h4>Hi {{ user.username }}!</h4>
+            <h2>Hi {{ user.username }}!</h2>
             {% else %}
-            <h4>You are not logged in</h4>
+            <h2>You are not logged in</h2>
             {% endif %}
         </div>
     </div>
-    <div class="row">
+    <div class="row mt-4">
         <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
             <div class="card">
                 <div class="card-body p-3">
@@ -63,8 +63,8 @@
                             <div class="numbers">
                                 <p class="text-sm mb-0 text-capitalize font-weight-bold">Private Repositories</p>
                                 <h5 class="font-weight-bolder mb-0">
-                                    {% if user.is_authenticated and request.session.profile.total_private_repos_count%}
-                                    {{request.session.profile.total_private_repos_count}}
+                                    {% if user.is_authenticated and request.session.profile.repo_priv_count%}
+                                    {{request.session.profile.repo_priv_count}}
                                     {% else %}
                                     0
                                     {% endif %}
@@ -88,8 +88,8 @@
                             <div class="numbers">
                                 <p class="text-sm mb-0 text-capitalize font-weight-bold">Total Public Gists</p>
                                 <h5 class="font-weight-bolder mb-0">
-                                    {% if user.is_authenticated and request.session.profile.public_gists_count %}
-                                    {{request.session.profile.public_gists_count}}
+                                    {% if user.is_authenticated and request.session.profile.gist_pub_count %}
+                                    {{request.session.profile.gist_pub_count}}
                                     {% else %}
                                     0
                                     {% endif %}
@@ -131,7 +131,7 @@
             </div>
         </div>
     </div>
-    <div class="row mt-xl-4 mt-1">
+    <!-- <div class="row mt-xl-4 mt-1">
         <div class="col-xl-3 col-sm-6">
             <div class="card">
                 <div class="card-body p-3">
@@ -157,24 +157,77 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <div class="row mt-4">
         <div class="col-lg-5 mb-lg-0 mb-4">
             <div class="card z-index-2">
                 <div class="card-header pb-0">
-                    <h6>Commit Overview</h6>
-                    <!-- <p class="text-sm">
-                        <i class="fa fa-arrow-up text-success"></i>
-                        <span class="font-weight-bold">4% more</span> in 2021
-                    </p> -->
+                    <h6 id="chart-main-title">Select a Repository</h6>
+                    <!-- <button id="toggleButton" class="btn" data-bs-toggle="collapse"
+                        data-bs-target="#chart-main-controls" aria-expanded="false" aria-controls="chart-main-controls"
+                        style="transition: transform 0.3s ease-in-out;">
+                        <i class="fas fa-arrow-up"></i>
+                    </button> -->
+                    <!-- <i id="toggleButton" data-bs-toggle="collapse" data-bs-target="#chart-main-controls"
+                        aria-expanded="false" aria-controls="chart-main-controls"
+                        style="transition: transform 0.3s ease-in-out;" class="fas fa-arrow-up"></i>
+                    <script>
+                        const toggleButton = document.getElementById('toggleButton');
+                        let isArrowUp = true;
+
+                        toggleButton.addEventListener('click', function () {
+                            if (isArrowUp) {
+                                toggleButton.style.transform = 'rotate(180deg)';
+                            } else {
+                                toggleButton.style.transform = 'rotate(0deg)';
+                            }
+
+                            isArrowUp = !isArrowUp;
+                        });
+                    </script> -->
+                    <!-- class="collapse" -->
+                    <div id="chart-main-controls">
+                        <div>
+                            <button onclick="set_chart('Commit Activity')" type="button" class="btn btn-secondary">
+                                Commit Activity
+                            </button>
+                            <button onclick="set_chart('Code Frequency')" type="button" class="btn btn-secondary">
+                                Code Frequency
+                            </button>
+                        </div>
+                        <div>
+                            <button onclick="changeTimeRange_ext('chart-main', 0)" type="button"
+                                class="btn btn-primary">
+                                1 Day
+                            </button>
+                            <button onclick="changeTimeRange_ext('chart-main', 1)" type="button"
+                                class="btn btn-primary">
+                                1 Week
+                            </button>
+                            <button onclick="changeTimeRange_ext('chart-main', 2)" type="button"
+                                class="btn btn-primary">
+                                1 Month
+                            </button>
+                            <button onclick="changeTimeRange_ext('chart-main', 3)" type="button"
+                                class="btn btn-primary">
+                                6 Months
+                            </button>
+                            <button onclick="changeTimeRange_ext('chart-main', 4)" type="button"
+                                class="btn btn-primary">
+                                1 Year
+                            </button>
+                            <button onclick="changeTimeRange_ext('chart-main', 5)" type="button"
+                                class="btn btn-primary">
+                                Max
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body p-3">
                     <div class="chart">
-                        <canvas id="chart-commit-activity" class="chart-canvas" height="300"></canvas>
+                        <canvas id="chart-main" class="chart-canvas" height="300"></canvas>
                     </div>
-                    <input onchange="filterCommitData()" type="date" id="startdate" value="2023-11-07">
-                    <input onchange="filterCommitData()" type="date" id="enddate" value="2023-11-12">
                 </div>
             </div>
         </div>
@@ -257,13 +310,8 @@
         <div class="col-lg-5 mb-lg-0 mb-4">
             <div class="card z-index-2">
                 <div class="card-body p-3">
-                    <div class="bg-gradient-dark border-radius-lg py-3 pe-1 mb-3">
-                        <div class="chart">
-                            <canvas id="chart-bars" class="chart-canvas" height="170"></canvas>
-                        </div>
-                    </div>
-                    <h6 class="ms-2 mt-4 mb-0"> Active Users </h6>
-                    <p class="text-sm ms-2"> (<span class="font-weight-bolder">+23%</span>) than last week </p>
+                    <h6 class="ms-2 mt-4 mb-0"> Status Overview </h6>
+                    <!-- <p class="text-sm ms-2"> (<span class="font-weight-bolder">+23%</span>) than last week </p> -->
                     <div class="container border-radius-lg">
                         <div class="row">
                             <div class="col-3 py-3 ps-0">
@@ -413,6 +461,23 @@
             </div>
         </div>
     </div>
+
+    <!-- <div class="row my-4">
+        <div class="card">
+            <table id="myTable" class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Chart</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+    </div> -->
 
     <div class="row my-4">
         <div class="col-lg-8 col-md-6 mb-md-0 mb-4">
@@ -821,40 +886,10 @@
 </script>
 
 <script>
-    var ctx2 = document.getElementById("chart-commit-activity").getContext("2d");
-
-    var gradientStroke1 = ctx2.createLinearGradient(0, 230, 0, 50);
-
-    gradientStroke1.addColorStop(1, 'rgba(203,12,159,0.2)');
-    gradientStroke1.addColorStop(0.2, 'rgba(72,72,176,0.0)');
-    gradientStroke1.addColorStop(0, 'rgba(203,12,159,0)'); //purple colors
-
-    //var gradientStroke2 = ctx2.createLinearGradient(0, 230, 0, 50);
-    //
-    //gradientStroke2.addColorStop(1, 'rgba(20,23,39,0.2)');
-    //gradientStroke2.addColorStop(0.2, 'rgba(72,72,176,0.0)');
-    //gradientStroke2.addColorStop(0, 'rgba(20,23,39,0)'); //purple colors
-
-    var commit_chart = new Chart(ctx2, {
-        type: "line",
-        data: {
-            labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-            datasets: [{
-                label: "Commit Activity",
-                tension: 0.4,
-                borderWidth: 0,
-                pointRadius: 0,
-                borderColor: "#cb0c9f",
-                borderWidth: 3,
-                backgroundColor: gradientStroke1,
-                fill: true,
-                data: [50, 40, 300, 700, 500, 250, 400, 230, 500, 0],
-                maxBarThickness: 6
-
-            },
-            ],
-        },
-        options: {
+    var charts = {
+        'id': {},
+        'raw': {},
+        'default_line_chart_options': {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
@@ -909,76 +944,195 @@
                 },
             },
         },
-    });
-
-    var commit_weeks = []
-    var commit_totals = []
-
-    function updateCommitChart(weeks, totals) {
-        // Function to format epoch timestamp to "Month Day - Month Day" format
-        function formatWeekRange(epoch) {
-            const start = new Date(epoch * 1000); // Convert seconds to milliseconds
-            const end = new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000); // Add 6 days for the end of the week
-
-            const startFormatted = start.toLocaleDateString('en-US', { month: 'short', year: 'numeric', day: 'numeric' });
-            const endFormatted = end.toLocaleDateString('en-US', { day: 'numeric' });
-
-            return `${startFormatted.split(" ")[0]} ${startFormatted.split(" ")[2]} | ${startFormatted.split(" ")[1].replace(',', '')} - ${endFormatted}`;
-        }
-
-        // Convert each week value to formatted date range
-        const formattedWeeks = weeks.map(formatWeekRange);
-
-        commit_chart.data.labels = formattedWeeks;
-        commit_chart.data.datasets[0].data = totals;
-
-        commit_chart.update();
     }
 
-    function filterCommitData() {
-        const startdate = document.getElementById('startdate');
-        const enddate = document.getElementById('enddate');
-        const startDateEpoch = new Date(startdate.value).getTime() / 1000;
-        const endDateEpoch = new Date(enddate.value).getTime() / 1000;
+    function formatWeekEpoch(epoch) {
+        const start = new Date(epoch * 1000); // Convert seconds to milliseconds
+        const end = new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000); // Add 6 days for the end of the week
 
-        function getIndicesForDateRange(startEpoch, endEpoch, weeksArray) {
+        const startFormatted = start.toLocaleDateString('en-US', { month: 'short', year: 'numeric', day: 'numeric' });
+        const endFormatted = end.toLocaleDateString('en-US', { day: 'numeric' });
+
+        return `${startFormatted.split(" ")[0]} ${startFormatted.split(" ")[2]} | ${startFormatted.split(" ")[1].replace(',', '')} - ${endFormatted}`;
+    }
+
+    function formatDayEpoch(epoch) {
+        // Create a new Date object using the epoch timestamp (in milliseconds)
+        const date = new Date(epoch * 1000);
+
+        // Get month abbreviation and full year
+        const monthAbbrev = new Intl.DateTimeFormat('en', { month: 'short' }).format(date);
+        const year = date.getFullYear();
+
+        // Get day and pad it with leading zero if needed
+        const day = String(date.getDate()).padStart(2, '0');
+
+        return `${monthAbbrev} ${day}, ${year}`;
+    }
+
+    function updateChart(chart_id, y_arr = null, x_arr = null) {
+        const chart_i = charts.id[chart_id]
+        const chart_e = charts[chart_i]
+        const ctx = chart_e.ctx
+        const chart = chart_e.chart
+        const x_labels = charts.raw[chart_id].x_labels
+        const x_colors = charts.raw[chart_id].x_colors
+
+        if (y_arr == null || x_arr == null) {
+            x_arr = charts.raw[chart_id].raw_x
+            y_arr = charts.raw[chart_id].raw_y.map(charts.raw[chart_id].format_method)
+        }
+
+        const new_chart_dataset = function (data, label, set_background_color, set_border_color) {
+            return {
+                label: label,
+                tension: 0.4,
+                borderWidth: 0,
+                pointRadius: 0,
+                borderColor: set_border_color,
+                borderWidth: 2,
+                backgroundColor: set_background_color,
+                fill: true,
+                data: data,
+                maxBarThickness: 6
+            }
+        }
+
+        //controls = document.getElementById(chart_i + '-controls');
+        //new bootstrap.Collapse(controls);
+
+        document.getElementById(chart_i + '-title').innerHTML = chart_id;
+        charts[chart_i].current = chart_id
+
+        chart.data.labels = y_arr;
+        chart.data.datasets.length = 0;
+        for (let i = 0; i < x_arr.length; i++) {
+            var color = x_colors[i]
+            var gs = ctx.createLinearGradient(0, 230, 0, 50);
+            gs.addColorStop(1, color + "55");
+            gs.addColorStop(0.2, color + "00");
+            gs.addColorStop(0, color + "20");
+            chart.data.datasets.push(new_chart_dataset(x_arr[i], x_labels[i], gs, color));
+        }
+
+        chart.update();
+    }
+
+    function changeTimeRange(chart_id, range_id) {
+        const chart_time_ranges = [
+            86400, // Day
+            604800, // Week
+            2592000, // Month
+            15768000, // 6 Months
+            31536000, // Year
+            999999999999, // Max
+        ]
+
+        const getIndicesForEpochRange = function (startEpoch, endEpoch, epoch_times) {
             let startIndex = null;
             let endIndex = null;
 
-            for (let i = 0; i < weeksArray.length; i++) {
-                const week = weeksArray[i];
+            for (let i = 0; i < epoch_times.length; i++) {
+                const epoch = epoch_times[i];
 
-                if (week >= startEpoch && startIndex == null) {
-                    console.log(week, startEpoch)
+                if (epoch >= startEpoch && startIndex == null) {
                     startIndex = i;
                 }
 
-                if (week <= endEpoch) {
+                if (epoch <= endEpoch) {
                     endIndex = i;
                 } else {
-                    break; // Stop searching once we're past the end date
+                    break;
                 }
+            }
+
+            if (startIndex == null) {
+                startIndex = endIndex;
             }
 
             return { startIndex, endIndex };
         }
 
-        const { startIndex, endIndex } = getIndicesForDateRange(startDateEpoch, endDateEpoch, commit_weeks);
+        const chart_i = charts.id[chart_id]
+        const chart_e = charts[chart_i]
+        const ctx = chart_e.ctx
+        const chart = chart_e.chart
+        const raw_x = charts.raw[chart_id].raw_x
+        const raw_y = charts.raw[chart_id].raw_y
+        const format_method = charts.raw[chart_id].format_method
 
-        const filterWeeks = commit_weeks.slice(startIndex, endIndex + 1)
-        const filterDatapoints = commit_totals.slice(startIndex, endIndex + 1);
+        const endDateEpoch = charts.raw[chart_id].raw_y[charts.raw[chart_id].raw_y.length - 1];
+        const startDateEpoch = Math.max(0, endDateEpoch - chart_time_ranges[range_id]);
 
-        //console.log(commit_weeks)
-        //console.log(startdate)
-        //console.log(enddate)
-        //console.log(startDateEpoch)
-        //console.log(endDateEpoch)
-        //console.log(startIndex)
-        //console.log(endIndex)
-        //console.log(filterWeeks)
-        //console.log(filterDatapoints)
+        const { startIndex, endIndex } = getIndicesForEpochRange(startDateEpoch, endDateEpoch, raw_y);
 
-        updateCommitChart(filterWeeks, filterDatapoints);
+        const filtered_y = raw_y.slice(startIndex, endIndex + 1)
+        var filtered_x = []
+        for (let i = 0; i < raw_x.length; i++) {
+            filtered_x.push(raw_x[i].slice(startIndex, endIndex + 1));
+        }
+        const formatted_y = filtered_y.map(format_method);
+
+        charts.raw[chart_id].range = range_id;
+        updateChart(chart_id, formatted_y, filtered_x);
+    }
+
+    function get_current(chart_i) {
+        if (!(chart_i in charts) || charts[chart_i].current == null) {
+            console.error('Current chart is null');
+            return null
+        }
+        return charts[chart_i].current
+    }
+
+    function changeTimeRange_ext(chart_i, range_id) {
+        chart_id = get_current(chart_i);
+        if (chart_id == null)
+            return
+        changeTimeRange(chart_id, range_id);
+    }
+
+    function newLineChart(chart_i) {
+        var ctx = document.getElementById(chart_i).getContext("2d");
+
+        var chart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: ['Empty'],
+                datasets: [],
+            },
+            options: charts.default_line_chart_options
+        });
+
+        charts[chart_i] = {
+            'ctx': ctx,
+            'chart': chart,
+            'current': null,
+        }
+    }
+
+    function newChartInterface(id, chart_i, x_labels, x_colors, format_method) {
+        if (id in charts.id)
+            return id
+        charts.id[id] = chart_i
+        charts.raw[id] = {
+            'format_method': format_method,
+            'raw_y': [],
+            'raw_x': [],
+            'x_labels': x_labels,
+            'x_colors': x_colors,
+            'range': 5,
+        }
+        if (!(chart_i in charts)) {
+            newLineChart(chart_i) // TODO: not just line charts?
+        }
+        return id
+    }
+
+    function set_chart(chart_id, range_id = null) {
+        if (range_id == null)
+            range_id = charts.raw[chart_id].range;
+        changeTimeRange(chart_id, range_id);
     }
 </script>
 
@@ -1017,109 +1171,106 @@
                         repo_id: itemId,
                     },
                     success: function (response) {
-                        console.log('Repo Chosen:', response);
+                        //console.log('Repo Chosen:', response);
 
-                        commit_weeks = response.commit_activity[0].map(week => week.week);
-                        commit_totals = response.commit_activity[0].map(week => week.total);
+                        code_id = newChartInterface('Code Frequency', 'chart-main', ['Additions', 'Subtractions'], ['#159e11', '#d11717'], formatWeekEpoch);
+                        commit_id = newChartInterface('Commit Activity', 'chart-main', ['Commit Activity'], ['#cb0c9f'], formatDayEpoch);
 
-                        updateCommitChart(commit_weeks, commit_totals);
+                        //charts.raw[commit_id].raw_y = response.commit_activity[0].map(week => week.week);
+                        //charts.raw[commit_id].raw_x = [response.commit_activity[0].map(week => week.total)];
+
+                        const dayCountsArray = [];
+                        const dailyEpochsArray = [];
+                        response.commit_activity.forEach(dayData => {
+                            // Extract day counts and starting epoch from each dayData object
+                            const dayCounts = dayData.days;
+                            const startOfWeekEpoch = dayData.week;
+
+                            // Calculate daily epochs based on the start of the week
+                            const dailyEpochs = dayCounts.map((count, index) => startOfWeekEpoch + index * 24 * 60 * 60);
+
+                            // Push the values to the respective arrays
+                            dayCounts.forEach(count => dayCountsArray.push(count));
+                            dailyEpochs.forEach(epoch => dailyEpochsArray.push(epoch));
+
+                        });
+
+                        charts.raw[commit_id].raw_y = dailyEpochsArray
+                        charts.raw[commit_id].raw_x = [dayCountsArray]
+
+                        charts.raw[code_id].raw_y = response.code_freq.map(week => week[0]);
+                        charts.raw[code_id].raw_x = [response.code_freq.map(week => week[1]), response.code_freq.map(week => week[2])]
+
+                        set_chart(commit_id);
+
+                        const data = [
+                            {
+                                id: 1,
+                                name: 'Item 1',
+                                chartData: [10, 20, 15], // Example chart data for Item 1
+                            },
+                            {
+                                id: 2,
+                                name: 'Item 2',
+                                chartData: [5, 15, 25], // Example chart data for Item 2
+                            },
+                            // Add more items as needed
+                        ];
+
+                        //data.forEach(function (item) {
+                        //    var newRow = '<tr>' +
+                        //        '<td>' + item.id + '</td>' +
+                        //        '<td>' + item.name + '</td>' +
+                        //        '<td>' +
+                        //        '<canvas id="chart' + item.id + '" width="50" height="50"></canvas>' +
+                        //        '</td>' +
+                        //        '</tr>';
+
+                        //    $('#myTable tbody').append(newRow);
+
+                        //    // Use Chart.js to create a chart for each row
+                        //    var ctx = document.getElementById('chart' + item.id).getContext('2d');
+                        //    var myChart = new Chart(ctx, {
+                        //        type: 'line',
+                        //        data: {
+                        //            labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '6', '4', '5', '6', '54', '1', '2', '35', '4', '8', '7', '5', '64', '54', '45', '12', '4'],
+                        //            datasets: [{
+                        //                label: 'Chart for ' + item.name,
+                        //                data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 4, 5, 6, 54, 1, 2, 35, 4, 8, 7, 5, 64, 54, 45, 12, 4],
+                        //            }],
+                        //        },
+                        //        options: {
+                        //            responsive: true,
+                        //            maintainAspectRatio: false,
+                        //            scales: {
+                        //                x: {
+                        //                    display: false,
+                        //                },
+                        //                y: {
+                        //                    display: false,
+                        //                }
+                        //            },
+                        //            plugins: {
+                        //                legend: {
+                        //                    display: false
+                        //                }
+                        //            }
+                        //        }
+                        //    });
+                        //});
 
                         spinner.classList.add('d-none');
                         enable = true
                     },
                     error: function (error) {
-                        console.error('Error choosing repo:', error);
                         spinner.classList.add('d-none');
                         enable = true
+                        console.error('Error choosing repo:', error);
                     },
                 });
             });
         });
     });
 </script>
-
-<script>
-    var ctx = document.getElementById("chart-bars").getContext("2d");
-    new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-            datasets: [{
-                label: "Sales",
-                tension: 0.4,
-                borderWidth: 0,
-                borderRadius: 4,
-                borderSkipped: false,
-                backgroundColor: "#fff",
-                data: [450, 200, 100, 220, 500, 100, 400, 230, 500],
-                maxBarThickness: 6
-            },],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false,
-                }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index',
-            },
-            scales: {
-                y: {
-                    grid: {
-                        drawBorder: false,
-                        display: false,
-                        drawOnChartArea: false,
-                        drawTicks: false,
-                    },
-                    ticks: {
-                        suggestedMin: 0,
-                        suggestedMax: 500,
-                        beginAtZero: true,
-                        padding: 15,
-                        font: {
-                            size: 14,
-                            family: "Open Sans",
-                            style: 'normal',
-                            lineHeight: 2
-                        },
-                        color: "#fff"
-                    },
-                },
-                x: {
-                    grid: {
-                        drawBorder: false,
-                        display: false,
-                        drawOnChartArea: false,
-                        drawTicks: false
-                    },
-                    ticks: {
-                        display: false
-                    },
-                },
-            },
-        },
-    });
-</script>
-
-<!-- <script>
-    var item_json = '{{ items|escapejs }}'
-    if (item_json) {
-        var items = JSON.parse(item_json);
-
-        if (items && typeof items.username !== 'undefined') {
-            if (items.auth) {
-                alert('Welcome, ' + items.username + '!');
-            } else {
-                alert('Guest user');
-            }
-        } else {
-            console.error('Error: items is not in the expected format');
-        }
-    }
-</script> -->
 
 {% endblock scripts %}

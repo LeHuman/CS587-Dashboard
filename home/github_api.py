@@ -8,6 +8,7 @@ from github3.users import AuthenticatedUser
 from github3.users import ShortUser
 from github3.events import Event
 from github3.repos import ShortRepository, Repository
+from github3.repos.commit import ShortCommit
 
 
 def get_datetime_str(dt: datetime | str | None) -> dict[str, str]:
@@ -74,6 +75,23 @@ def str_short_user(usr: ShortUser) -> dict[str, str]:
 
     Returns:
         dict[str, str]: ShortUser as a string dictionary
+    """
+    return {
+        "id": str(usr.id),
+        "login": str(usr.login),
+        "avatar_url": str(usr.avatar_url),
+        "url": str(usr.html_url),
+    }
+
+
+def str_short_commit(usr: ShortCommit) -> dict[str, str]:
+    """Returns a github3 ShortCommit as a string dictionary
+
+    Args:
+        usr (ShortCommit): The given ShortCommit
+
+    Returns:
+        dict[str, str]: ShortCommit as a string dictionary
     """
     return {
         "id": str(usr.id),
@@ -151,7 +169,10 @@ def request_profile(access_token: str) -> Tuple[GitHub, AuthenticatedUser, dict[
     Returns:
         Tuple[GitHub, AuthenticatedUser, dict[str, Any]]: The GitHub instance, current user, and a string dictionary of various attributes
     """
+    # TODO: Parallel requests
     gh, gh_usr = get_user(token=access_token)
+    repos = [str_short_repository(x) for x in gh.repositories('all', 'created', 'desc')]
+    priv_repo_count = len(repos) - gh_usr.public_repos_count
     return gh, gh_usr, {
         "id": gh_usr.id,
         "name": gh_usr.name,
@@ -167,11 +188,11 @@ def request_profile(access_token: str) -> Tuple[GitHub, AuthenticatedUser, dict[
         "starred_repos": [str_short_repository(x) for x in gh_usr.starred_repositories(sort='updated', number=10)],
         "subscriptions": [str_short_repository(x) for x in gh_usr.subscriptions(number=10)],
         "plan": gh_usr.plan,
+        "repos": repos,
         "follower_count": gh_usr.followers_count,
         "repo_pub_count": gh_usr.public_repos_count,
-        "repo_priv_count": gh_usr.total_private_repos_count if gh_usr.total_private_repos_count else 0,
-        "gist_pub_count": gh_usr.public_gists_count if gh_usr.public_gists_count else 0,
-        "repos": [str_short_repository(x) for x in gh.repositories('all', 'created', 'desc')],
+        "repo_priv_count": priv_repo_count,
+        "gist_pub_count": gh_usr.public_gists_count,
         "repo_first": get_datetime_str(gh.repositories('all', 'created', 'asc', 1).next().created_at),
         "repo_last": get_datetime_str(gh.repositories('all', 'created', 'desc', 1).next().created_at),
         "api_limit": gh_usr.ratelimit_remaining,

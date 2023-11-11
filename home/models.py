@@ -63,20 +63,41 @@ class GitHubRepositoryModel(models.Model):
     collaborators = models.JSONField(default=list)
     collaborators_access = models.BooleanField(default=False)
     commit_activity = models.JSONField(default=list)
+    commits = models.JSONField(default=list)
     code_freq = models.JSONField(default=list)
     branches = models.JSONField(default=list)
     branch_count = models.IntegerField(default=1)
 
     def __init__(self,  user: User, _id=None, cached_at=None, owner=None, name=None, full_name=None, description=None, created_at=None, updated_at=None, homepage=None,
                  language=None, archived=None, forks_count=None, open_issues_count=None, watchers_count=None, url=None, collaborators=None, collaborators_access=None, commit_activity=None,
-                 code_freq=None, branches=None, branch_count=None, repo: Repository | None = None):
+                 commits=None, code_freq=None, branches=None, branch_count=None, repo: Repository | None = None):
         super().__init__()
         if isinstance(user, User):
             self.user = user
+
         if repo:
+            owner = str_short_user(repo.owner)
+
+            commit_activity = iter_long(repo.commit_activity)
+            code_frequency = iter_long(repo.code_frequency)
+
+            try:
+                collaborators = [str_short_user(x) for x in repo.collaborators()]
+            except ForbiddenError as fe:
+                collaborators = []
+                print(fe)
+
+            commits = {}
+
+            for user in collaborators + [owner]:
+                commits[user['login']] = [int(get_gh_datetime(x.commit.committer['date']).timestamp()) for x in repo.commits(author=user['login'])]
+                sleep(1)
+
+            #print('\n'.join(f'{key}: {len(array)}' for key, array in commits.items()))
+
             self.id = repo.id
             self.cached_at = now()
-            self.owner = str_short_user(repo.owner)
+            self.owner = owner
             self.name = repo.name
             self.full_name = repo.full_name
             self.description = str(repo.description)
@@ -89,16 +110,12 @@ class GitHubRepositoryModel(models.Model):
             self.open_issues_count = int(repo.open_issues_count)
             self.watchers_count = int(repo.watchers_count)
             self.url = str(repo.html_url)
-            try:
-                self.collaborators = [str_short_user(x) for x in repo.collaborators()],
-                self.collaborators_access = True
-            except ForbiddenError as fe:
-                print(fe)
-                self.collaborators = []
-                self.collaborators_access = False
-            self.commit_activity = iter_long(repo.commit_activity),
-            self.code_freq = iter_long(repo.code_frequency),
-            self.branches = [x.name for x in repo.branches()],
+            self.collaborators = collaborators
+            self.collaborators_access = False
+            self.commit_activity = commit_activity
+            self.commits = commits
+            self.code_freq = code_frequency
+            self.branches = [x.name for x in repo.branches()]
             self.branch_count = len(self.branches)
         else:
             self.id = _id
@@ -119,6 +136,7 @@ class GitHubRepositoryModel(models.Model):
             self.collaborators = collaborators
             self.collaborators_access = collaborators_access
             self.commit_activity = commit_activity
+            self.commits = commits
             self.code_freq = code_freq
             self.branches = branches
             self.branch_count = branch_count

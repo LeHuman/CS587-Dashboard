@@ -53,8 +53,12 @@ def choose_repo(request):
 
 
 def finish_login(request, access_token):
-    print(access_token)
+    # print(access_token)
+    print('Requesting Profile')
     gh, gh_usr, request.session["profile"] = request_profile(access_token=access_token)
+    print(gh_usr.owned_private_repos_count)
+    print(gh_usr.total_private_repos_count)
+    print('Done')
     try:
         # IMPROVE: update periodically, instead on each logon
         user = User.objects.get(username=gh_usr.login)
