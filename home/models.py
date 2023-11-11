@@ -49,6 +49,7 @@ class GitHubRepositoryModel(models.Model):
     id = models.IntegerField(primary_key=True)  # IMPROVE: Only works in context of GitHub
     cached_at = models.DateTimeField(default=datetime.utcfromtimestamp(0).replace(tzinfo=utc))
     owner = models.JSONField(default=dict)
+    private = models.BooleanField(default=False)
     name = models.CharField(max_length=255)
     full_name = models.CharField(max_length=512)
     description = models.CharField(max_length=1024)
@@ -71,7 +72,7 @@ class GitHubRepositoryModel(models.Model):
     branches = models.JSONField(default=list)
     branch_count = models.IntegerField(default=1)
 
-    def __init__(self,  usr: User, _id=None, cached_at=None, owner=None, name=None, full_name=None, description=None, created_at=None, updated_at=None, homepage=None,
+    def __init__(self,  usr: User, _id=None, cached_at=None, owner=None, private=None, name=None, full_name=None, description=None, created_at=None, updated_at=None, homepage=None,
                  language=None, archived=None, forks_count=None, open_issues_count=None, pull_requests_count=None, pull_requests=None, watchers_count=None, url=None, collaborators=None, collaborators_access=None, commit_activity=None,
                  commits=None, code_freq=None, branches=None, branch_count=None, repo: Repository | None = None):
         super().__init__()
@@ -120,6 +121,7 @@ class GitHubRepositoryModel(models.Model):
             self.id = repo.id
             self.cached_at = now()
             self.owner = owner
+            self.private = bool(repo.private)
             self.name = repo.name
             self.full_name = repo.full_name
             self.description = str(repo.description)
@@ -145,6 +147,7 @@ class GitHubRepositoryModel(models.Model):
             self.id = _id
             self.cached_at = cached_at
             self.owner = owner
+            self.private = private
             self.name = name
             self.full_name = full_name
             self.description = description
@@ -172,6 +175,7 @@ class GitHubRepositoryModel(models.Model):
             "id": self.id,
             "cached_at": self.cached_at,
             "owner": self.owner,
+            "private": self.private,
             "name": self.name,
             "full_name": self.full_name,
             "description": self.description,

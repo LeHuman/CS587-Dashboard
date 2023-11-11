@@ -138,10 +138,12 @@
                     <h6 id="chart-main-title">Select a Repository</h6>
                     <div id="chart-main-controls">
                         <div>
-                            <button onclick="set_chart('Commit Activity')" type="button" class="btn btn-sm btn-secondary">
+                            <button onclick="set_chart('Commit Activity')" type="button"
+                                class="btn btn-sm btn-secondary">
                                 Commit Activity
                             </button>
-                            <button onclick="set_chart('Code Frequency')" type="button" class="btn btn-sm btn-secondary">
+                            <button onclick="set_chart('Code Frequency')" type="button"
+                                class="btn btn-sm btn-secondary">
                                 Code Frequency
                             </button>
                         </div>
@@ -192,6 +194,10 @@
                         data-repo-url="{{repo.url}}" data-item-id="{{repo.id}}">
                         <div class="d-flex align-items-center">
                             <h5 class="mb-0">{{repo.name}}</h5>
+                            {% if repo.private %}
+                            <a target="_blank" class="ni ni-glasses-2 text-lg ms-2"
+                                style="color: rgb(174, 31, 207);"></a>
+                            {% endif %}
                             <a href="{{repo.url}}" target="_blank" class="ni ni-curved-next text-lg ms-2"></a>
                             <div class="spinner-border spinner-border-sm text-primary ms-2 d-none" role="status"
                                 id="spinner-{{repo.id}}">
@@ -909,13 +915,18 @@
                 success: function (response) {
                     repo_success(response);
                     desc = '';
+                    priv = ''
                     if (response.description != 'None') {
                         desc = `<p class="mb-1">${response.description}</p>`
+                    }
+                    if (response.private) {
+                        priv = `<a target="_blank" class="ni ni-glasses-2 text-lg ms-2" style="color: rgb(174, 31, 207);"></a>`
                     }
                     linked_repo.innerHTML = `<ul class="list-group" id="itemList">
                         <li class="list-group-item clickable">
                             <div class="d-flex align-items-center">
                                 <h5 class="mb-0">${response.name}</h5>
+                                ${priv}
                                 <a href="${response.url}" target="_blank" class="ni ni-curved-next text-lg ms-2"></a>
                             </div>
                             <div class="d-flex align-items-center">

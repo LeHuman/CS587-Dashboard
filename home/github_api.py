@@ -155,6 +155,7 @@ def str_short_repository(repo: ShortRepository) -> dict[str, str | dict[str, str
         "id": repo.id,
         "name": repo.name,
         "owner": str_short_user(repo.owner),
+        "private": repo.private,
         "full_name": repo.full_name,
         "description": repo.description,
         "created_at": get_datetime_str(repo.created_at),
