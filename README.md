@@ -16,6 +16,8 @@ The environment variables are as follows.
 # Github OAuth App authentication
 GITHUB_OAUTH_SECRET=********
 GITHUB_OAUTH_CLIENT_ID=********
+
+# Django secret key
 SECRET_KEY=********
 
 # Bypass authentication with a GitHub personal token (Defaults to OAuth app behavior, uncomment to use)
