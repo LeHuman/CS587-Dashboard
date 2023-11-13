@@ -14,6 +14,7 @@ from django.contrib.auth.models import User
 from django.views.generic.base import TemplateView
 from django.contrib.auth import login, logout
 from django.contrib import messages
+from django.db.utils import OperationalError
 
 from oauthlib.oauth2 import WebApplicationClient
 from core import settings
@@ -38,12 +39,17 @@ def request_repository(user, access_token: str, repo_id: int | None = None, repo
         print(f"Repo {repo_id} not found!")
     except InvalidStateError:
         print(f"Repo {repo_id} invalidated!")
+    except OperationalError:
+        print(f"Repo Failed to get, no Database connected?")
     if repo_owner:
         repo = get_repository(access_token, repo_owner=repo_owner, repo_name=repo_name)
     elif repo_id:
         repo = get_repository(access_token, repo_id)
     repo = GitHubRepositoryModel(usr=user, repo=repo)
-    repo.save()
+    try:
+        repo.save()
+    except Exception as e:
+        pass
     return repo.dump()
 
 
