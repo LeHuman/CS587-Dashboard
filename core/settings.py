@@ -69,7 +69,8 @@ if 'LOCAL' not in os.environ:
 
 # Render Deployment Code
 # DEBUG = 'RENDER' not in os.environ
-DEBUG = True
+# DEBUG = True
+DEBUG = False
 CURRENT_TOKEN = os.getenv("CURRENT_TOKEN", None)
 
 # HOSTs List
