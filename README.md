@@ -39,3 +39,13 @@ SECRET_KEY=********
 ```
 
 If no environment variables are set, the app should run, but logging in will not work.
+
+## Running Locally
+
+The app can be run locally using the following commands
+
+`pip install -r requirements.txt`
+
+`py manage.py runserver_plus`
+
+Python 3.12 was used for this project
